@@ -34,14 +34,14 @@ object FailureNotifier {
 
         val manager = context.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "转发失败", NotificationManager.IMPORTANCE_DEFAULT))
+            manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Reenvío fallido", NotificationManager.IMPORTANCE_DEFAULT))
         }
         val count = recentFailureCount(context)
-        val title = "短信转发失败"
+        val title = "Falló el reenvío del SMS"
         val text = if (FailureNotificationPolicy.shouldMergeRecentFailures(count)) {
-            "10 分钟内已有 $count 条转发失败，点击查看详情"
+            "Hubo $count reenvíos fallidos en los últimos 10 minutos. Tocá para ver detalles."
         } else {
-            "${obj.optString("receivedAt").takeLast(8)} 收到的短信未能转发，点击查看详情"
+            "${obj.optString("receivedAt").takeLast(8)} No se pudo reenviar el SMS. Tocá para ver detalles."
         }
         val intent = Intent(context, LogDetailActivity::class.java).putExtra(LogDetailActivity.EXTRA_EVENT_ID, eventId)
         val pending = PendingIntent.getActivity(context, eventId.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
