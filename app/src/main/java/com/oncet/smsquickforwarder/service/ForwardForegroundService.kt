@@ -17,7 +17,7 @@ class ForwardForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "短信转发运行状态", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(CHANNEL_ID, "Estado del servicio de reenvío de SMS", NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
@@ -41,7 +41,7 @@ class ForwardForegroundService : Service() {
     private fun buildNotification() = android.app.Notification.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(getString(R.string.forwarding_enabled))
-        .setContentText("转发到：${SettingsStore.targetPhone(this)}")
+        .setContentText("Reenviar a: ${SettingsStore.targetPhone(this)}")
         .setOngoing(true)
         .setContentIntent(
             PendingIntent.getActivity(
