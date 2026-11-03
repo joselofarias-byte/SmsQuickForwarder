@@ -13,10 +13,10 @@ object RuleEngine {
     ): RuleEvaluation {
         val normalizedSender = PhoneMatchUtils.normalizePhoneForMatch(sender)
         if (applyLoopGuard && targetPhone.isNotBlank() && PhoneMatchUtils.phoneEquals(sender, targetPhone)) {
-            return RuleEvaluation(false, "skipped_from_target", "来自目标号码，避免循环", mode, normalizedSender, emptyList(), emptyList(), null, true)
+            return RuleEvaluation(false, "skipped_from_target", "El remitente es el número de destino; se evita un bucle", mode, normalizedSender, emptyList(), emptyList(), null, true)
         }
         if (applyLoopGuard && body.contains(FORWARD_MARKER, ignoreCase = true)) {
-            return RuleEvaluation(false, "skipped_forward_marker", "内容包含 $FORWARD_MARKER，避免循环", mode, normalizedSender, emptyList(), emptyList(), null, true)
+            return RuleEvaluation(false, "skipped_forward_marker", "El contenido incluye $FORWARD_MARKER; se evita un bucle", mode, normalizedSender, emptyList(), emptyList(), null, true)
         }
 
         val enabledRules = rules.filter { it.enabled }.sortedBy { it.priority }
@@ -25,20 +25,20 @@ object RuleEngine {
 
         if (excludeMatches.isNotEmpty()) {
             val primary = excludeMatches.minByOrNull { it.priority }
-            return RuleEvaluation(false, "skipped_rule_exclude", "命中排除规则：${primary?.name.orEmpty()}", mode, normalizedSender, includeMatches, excludeMatches, primary)
+            return RuleEvaluation(false, "skipped_rule_exclude", "Coincide con la regla de exclusión: ${primary?.name.orEmpty()}", mode, normalizedSender, includeMatches, excludeMatches, primary)
         }
 
         return when (mode) {
             ForwardMode.ALL -> {
                 val primary = includeMatches.minByOrNull { it.priority }
-                RuleEvaluation(true, if (primary != null) "forwarded_rule_match" else "forwarded_all_mode", if (primary != null) "命中包含规则：${primary.name}" else "转发全部短信模式", mode, normalizedSender, includeMatches, excludeMatches, primary)
+                RuleEvaluation(true, if (primary != null) "forwarded_rule_match" else "forwarded_all_mode", if (primary != null) "Coincide con la regla de inclusión: ${primary.name}" else "Modo de reenvío de todos los SMS", mode, normalizedSender, includeMatches, excludeMatches, primary)
             }
             ForwardMode.MATCH_ONLY -> {
                 val primary = includeMatches.minByOrNull { it.priority }
                 if (primary != null) {
-                    RuleEvaluation(true, "forwarded_rule_match", "命中包含规则：${primary.name}", mode, normalizedSender, includeMatches, excludeMatches, primary)
+                    RuleEvaluation(true, "forwarded_rule_match", "Coincide con la regla de inclusión: ${primary.name}", mode, normalizedSender, includeMatches, excludeMatches, primary)
                 } else {
-                    RuleEvaluation(false, "skipped_no_include_match", "没有命中包含规则", mode, normalizedSender, includeMatches, excludeMatches, null)
+                    RuleEvaluation(false, "skipped_no_include_match", "No coincide con ninguna regla de inclusión", mode, normalizedSender, includeMatches, excludeMatches, null)
                 }
             }
         }
