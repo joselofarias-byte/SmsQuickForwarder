@@ -48,14 +48,14 @@ class DebugActivity : Activity() {
         })
 
         includeBodySwitch = android.widget.Switch(this).apply {
-            text = "包含完整短信内容"
+            text = getString(R.string.ui_incluir_el_contenido_completo_de_los_sms)
             isChecked = false
             setOnCheckedChangeListener { _: CompoundButton, _: Boolean -> refresh() }
         }
         root.addView(includeBodySwitch)
 
         includePhoneSwitch = android.widget.Switch(this).apply {
-            text = "分享时包含完整手机号"
+            text = getString(R.string.ui_incluir_los_numeros_completos_al_compartir)
             isChecked = false
         }
         root.addView(includePhoneSwitch)
@@ -81,7 +81,7 @@ class DebugActivity : Activity() {
         })
 
         root.addView(Button(this).apply {
-            text = "去设置"
+            text = getString(R.string.ui_abrir_ajustes)
             setOnClickListener { openAppSettings() }
         })
 
@@ -91,12 +91,12 @@ class DebugActivity : Activity() {
         })
 
         root.addView(Button(this).apply {
-            text = "电池优化设置"
+            text = getString(R.string.ui_ajustes_de_optimizacion_de_bateria)
             setOnClickListener { openBatterySettings() }
         })
 
         root.addView(Button(this).apply {
-            text = "刷新"
+            text = "Actualizar"
             setOnClickListener { refresh() }
         })
 
@@ -128,7 +128,7 @@ class DebugActivity : Activity() {
             val uri = FileProvider.getUriForFile(this, "$packageName.debugfileprovider", file)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/json"
-                putExtra(Intent.EXTRA_SUBJECT, "SmsQuickForwarder Debug JSON")
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.ui_smsquickforwarder_debug_json))
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 clipData = ClipData.newRawUri("sms_debug_json", uri)
@@ -144,8 +144,8 @@ class DebugActivity : Activity() {
     }
 
     private fun copyFullJson() {
-        copyTextToClipboard("SMS Quick Forwarder debug JSON", currentJsonText())
-        Toast.makeText(this, "调试 JSON 已复制，可以直接粘贴到聊天中", Toast.LENGTH_LONG).show()
+        copyTextToClipboard(getString(R.string.ui_sms_quick_forwarder_debug_json), currentJsonText())
+        Toast.makeText(this, getString(R.string.ui_depuracion_json_copiado_podes_pegarlo_directamente_en_el_chat), Toast.LENGTH_LONG).show()
     }
 
     private fun shareJsonAsText() {
@@ -154,22 +154,22 @@ class DebugActivity : Activity() {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, jsonText)
-                putExtra(Intent.EXTRA_SUBJECT, "SmsQuickForwarder Debug JSON")
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.ui_smsquickforwarder_debug_json))
             }
             startActivity(Intent.createChooser(intent, getString(R.string.share_as_text)))
         } catch (e: Exception) {
-            copyTextToClipboard("SMS Quick Forwarder debug JSON", jsonText)
-            Toast.makeText(this, "分享失败，调试 JSON 已复制，可以直接粘贴到聊天中", Toast.LENGTH_LONG).show()
+            copyTextToClipboard(getString(R.string.ui_sms_quick_forwarder_debug_json), jsonText)
+            Toast.makeText(this, getString(R.string.ui_no_se_pudo_compartir_depuracion_json_copiado_podes_pegarlo_direct), Toast.LENGTH_LONG).show()
         }
     }
 
     private fun showShareFallbackDialog(jsonText: String) {
         AlertDialog.Builder(this)
-            .setTitle("分享 JSON 文件失败")
-            .setMessage("目标 App 可能不支持 JSON 文件。你可以复制完整 JSON，或改为纯文本分享。")
+            .setTitle(getString(R.string.ui_compartir_json_no_se_pudo_compartir_el_archivo))
+            .setMessage(getString(R.string.ui_destino_app_puede_no_admitir_json_archivo_podes_copiar_el_json_o_))
             .setPositiveButton(getString(R.string.copy_full_json)) { _, _ ->
-                copyTextToClipboard("SMS Quick Forwarder debug JSON", jsonText)
-                Toast.makeText(this, "调试 JSON 已复制，可以直接粘贴到聊天中", Toast.LENGTH_LONG).show()
+                copyTextToClipboard(getString(R.string.ui_sms_quick_forwarder_debug_json), jsonText)
+                Toast.makeText(this, getString(R.string.ui_depuracion_json_copiado_podes_pegarlo_directamente_en_el_chat), Toast.LENGTH_LONG).show()
             }
             .setNegativeButton(getString(R.string.share_as_text)) { _, _ -> shareJsonAsText() }
             .show()
@@ -189,16 +189,16 @@ class DebugActivity : Activity() {
     }
 
     private fun copyDiagnosticSummary() {
-        copyTextToClipboard("SMS Quick Forwarder diagnostics", DebugInfoBuilder.diagnosticSummary(this))
-        Toast.makeText(this, "诊断摘要已复制", Toast.LENGTH_SHORT).show()
+        copyTextToClipboard(getString(R.string.ui_sms_quick_forwarder_diagnostics), DebugInfoBuilder.diagnosticSummary(this))
+        Toast.makeText(this, getString(R.string.ui_resumen_de_diagnostico_copiado), Toast.LENGTH_SHORT).show()
     }
 
     private fun confirmClearLogs() {
         AlertDialog.Builder(this)
-            .setTitle("清空调试日志")
-            .setMessage("只清空调试日志，不会清空转发设置。")
-            .setNegativeButton("取消", null)
-            .setPositiveButton("清空") { _, _ ->
+            .setTitle(getString(R.string.ui_eliminar_registros_de_depuracion))
+            .setMessage(getString(R.string.ui_solo_se_eliminan_los_registros_de_depuracion_los_ajustes_de_reenv))
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Vaciar") { _, _ ->
                 ForwardLogStore.clear(this)
                 refresh()
             }
@@ -217,7 +217,7 @@ class DebugActivity : Activity() {
         runCatching { startActivity(intent) }.onFailure {
             Toast.makeText(
                 this,
-                "无法自动打开设置，请手动进入：设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许",
+                getString(R.string.ui_no_se_pudieron_abrir_los_ajustes_automaticamente_abri_manualmente),
                 Toast.LENGTH_LONG
             ).show()
         }
