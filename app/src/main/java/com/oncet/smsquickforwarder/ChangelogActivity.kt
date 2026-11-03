@@ -13,7 +13,7 @@ class ChangelogActivity : Activity() {
         super.onCreate(savedInstanceState)
         val root = UiKit.page(this)
         root.addView(UiKit.title(this, getString(R.string.changelog)))
-        root.addView(UiKit.subtitle(this, "离线内置更新记录"))
+        root.addView(UiKit.subtitle(this, getString(R.string.ui_historial_de_cambios_disponible_sin_conexion)))
 
         val changes = runCatching {
             JSONArray(assets.open("changelog.json").bufferedReader().use { it.readText() })
