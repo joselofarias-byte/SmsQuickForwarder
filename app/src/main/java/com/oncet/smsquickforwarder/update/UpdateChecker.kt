@@ -22,13 +22,13 @@ class UpdateChecker(
             }
             val code = connection.responseCode
             if (code != HttpURLConnection.HTTP_OK) {
-                UpdateCheckResult.Error("GitHub 请求失败")
+                UpdateCheckResult.Error("Error al consultar GitHub")
             } else {
                 val body = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                 parseReleaseJson(body, currentVersion, ignoredVersion)
             }
         } catch (e: Exception) {
-            UpdateCheckResult.Error(e.message ?: "网络不可用")
+            UpdateCheckResult.Error(e.message ?: "Sin conexión a internet")
         } finally {
             connection?.disconnect()
         }
@@ -49,7 +49,7 @@ class UpdateChecker(
                 }
                 val tag = root.optString("tag_name")
                 val latestVersion = VersionComparator.normalize(tag)
-                    ?: return UpdateCheckResult.Error("返回格式异常")
+                    ?: return UpdateCheckResult.Error("Formato de respuesta no válido")
                 if (latestVersion == ignoredVersion) {
                     return UpdateCheckResult.UpToDate(currentVersion)
                 }
@@ -58,7 +58,7 @@ class UpdateChecker(
                 }
                 val releaseUrl = root.optString("html_url")
                 if (!releaseUrl.startsWith(REPO_RELEASE_URL_PREFIX)) {
-                    return UpdateCheckResult.Error("Release 地址异常")
+                    return UpdateCheckResult.Error("Dirección de publicación no válida")
                 }
                 val assets = root.optJSONArray("assets")
                 var apkName: String? = null
@@ -97,7 +97,7 @@ class UpdateChecker(
                     )
                 )
             } catch (e: Exception) {
-                UpdateCheckResult.Error("返回格式异常")
+                UpdateCheckResult.Error("Formato de respuesta no válido")
             }
         }
     }
