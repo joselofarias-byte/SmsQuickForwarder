@@ -1,5 +1,6 @@
 package com.oncet.smsquickforwarder.health
 
+import com.oncet.smsquickforwarder.DisplayLabels
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -17,33 +18,33 @@ import com.oncet.smsquickforwarder.update.UpdateScheduler
 class HealthCheckEngine(private val context: Context) {
     fun run(): HealthReport {
         val items = mutableListOf<HealthCheckItem>()
-        items.add(item("转发总开关", SettingsStore.isEnabled(context), "已开启", "已暂停", HealthSeverity.WARNING))
-        items.add(item("目标号码", SettingsStore.targetPhone(context).isNotBlank(), "已设置", "未设置目标号码", HealthSeverity.ACTION_REQUIRED))
-        items.add(permissionItem("接收短信权限", Manifest.permission.RECEIVE_SMS))
-        items.add(permissionItem("发送短信权限", Manifest.permission.SEND_SMS))
-        items.add(HealthCheckItem("通知权限", if (hasNotificationPermission()) HealthSeverity.OK else HealthSeverity.WARNING, if (hasNotificationPermission()) "已允许" else "未允许，通知不可用", "去授权"))
-        items.add(HealthCheckItem("SmsReceiver", HealthSeverity.OK, "已在 Manifest 声明"))
-        items.add(HealthCheckItem("BootReceiver", HealthSeverity.OK, "已在 Manifest 声明"))
-        items.add(HealthCheckItem("前台服务", if (!SettingsStore.isEnabled(context) || SettingsStore.isServiceRunning(context)) HealthSeverity.OK else HealthSeverity.WARNING, if (SettingsStore.isServiceRunning(context)) "运行中" else "未运行"))
-        items.add(HealthCheckItem("电池优化", if (batteryOk()) HealthSeverity.OK else HealthSeverity.WARNING, if (batteryOk()) "不受限制" else "可能受限制", "打开设置"))
+        items.add(item("Activar reenvío", SettingsStore.isEnabled(context), "Activado", "En pausa", HealthSeverity.WARNING))
+        items.add(item("Número de destino", SettingsStore.targetPhone(context).isNotBlank(), "Configurado", "No se configuró un número de destino", HealthSeverity.ACTION_REQUIRED))
+        items.add(permissionItem("Permiso para recibir SMS", Manifest.permission.RECEIVE_SMS))
+        items.add(permissionItem("Permiso para enviar SMS", Manifest.permission.SEND_SMS))
+        items.add(HealthCheckItem("Permiso de notificaciones", if (hasNotificationPermission()) HealthSeverity.OK else HealthSeverity.WARNING, if (hasNotificationPermission()) "Permitido" else "Sin permiso; las notificaciones no están disponibles", "Conceder permiso"))
+        items.add(HealthCheckItem("SmsReceiver", HealthSeverity.OK, "Declarado en el manifiesto"))
+        items.add(HealthCheckItem("BootReceiver", HealthSeverity.OK, "Declarado en el manifiesto"))
+        items.add(HealthCheckItem("Servicio en primer plano", if (!SettingsStore.isEnabled(context) || SettingsStore.isServiceRunning(context)) HealthSeverity.OK else HealthSeverity.WARNING, if (SettingsStore.isServiceRunning(context)) "En ejecución" else "Detenido"))
+        items.add(HealthCheckItem("Optimización de batería", if (batteryOk()) HealthSeverity.OK else HealthSeverity.WARNING, if (batteryOk()) "Sin restricciones" else "Puede estar restringido", "Abrir ajustes"))
         val lastSms = ForwardLogStore.findLatestTime(context) { it.optString("eventType") == "sms_received" }
         val lastSuccess = ForwardLogStore.findLatestTime(context) { isForwardSuccess(it.optString("decision")) }
         val lastFailure = ForwardLogStore.findLatestTime(context) { it.optString("decision").contains("failed", ignoreCase = true) }
-        items.add(HealthCheckItem("最近真实短信接收", HealthSeverity.OK, lastSms.ifBlank { "尚未记录真实短信测试" }))
-        items.add(HealthCheckItem("最近转发成功", HealthSeverity.OK, lastSuccess.ifBlank { "尚未记录成功转发" }))
+        items.add(HealthCheckItem("Último SMS real recibido", HealthSeverity.OK, lastSms.ifBlank { "Todavía no se probó con un SMS real" }))
+        items.add(HealthCheckItem("Último reenvío correcto", HealthSeverity.OK, lastSuccess.ifBlank { "Todavía no hay reenvíos correctos registrados" }))
         val activeFailure = FailureNotificationPolicy.hasActiveFailure(lastFailure, lastSuccess)
-        items.add(HealthCheckItem("最近失败", if (activeFailure) HealthSeverity.ACTION_REQUIRED else HealthSeverity.OK, if (lastFailure.isBlank()) "无失败记录" else "${ForwardLogStore.latestFailureReason(context)} ${if (activeFailure) "" else "，之后已恢复"}"))
-        items.add(HealthCheckItem("自动更新检查", if (UpdatePreferences.autoCheckEnabled(context)) HealthSeverity.OK else HealthSeverity.WARNING, if (UpdatePreferences.autoCheckEnabled(context)) "已开启" else "已关闭"))
+        items.add(HealthCheckItem("Último fallo", if (activeFailure) HealthSeverity.ACTION_REQUIRED else HealthSeverity.OK, if (lastFailure.isBlank()) "No hay fallos registrados" else "${ForwardLogStore.latestFailureReason(context)} ${if (activeFailure) "" else "; el servicio se recuperó después"}"))
+        items.add(HealthCheckItem("Búsqueda automática de actualizaciones", if (UpdatePreferences.autoCheckEnabled(context)) HealthSeverity.OK else HealthSeverity.WARNING, if (UpdatePreferences.autoCheckEnabled(context)) "Activado" else "Desactivado"))
         val mode = RuleStore.forwardMode(context)
         val includeOk = mode != ForwardMode.MATCH_ONLY || RuleStore.rules(context).any { it.enabled && it.type == RuleType.INCLUDE }
-        items.add(HealthCheckItem("当前规则模式", if (includeOk) HealthSeverity.OK else HealthSeverity.ACTION_REQUIRED, if (includeOk) mode.name else "仅匹配模式下没有启用的包含规则"))
-        items.add(HealthCheckItem("日志存储", if (ForwardLogStore.totalCount(context) >= 0) HealthSeverity.OK else HealthSeverity.WARNING, "当前 ${ForwardLogStore.totalCount(context)} 条"))
+        items.add(HealthCheckItem("Modo de reglas actual", if (includeOk) HealthSeverity.OK else HealthSeverity.ACTION_REQUIRED, if (includeOk) DisplayLabels.mode(mode.name) else "No hay reglas de inclusión activadas en el modo de coincidencias"))
+        items.add(HealthCheckItem("Almacenamiento de registros", if (ForwardLogStore.totalCount(context) >= 0) HealthSeverity.OK else HealthSeverity.WARNING, "${ForwardLogStore.totalCount(context)} registros guardados"))
         return HealthReport(HealthRules.overall(items), items)
     }
 
     private fun permissionItem(name: String, permission: String): HealthCheckItem {
         val ok = context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-        return HealthCheckItem(name, if (ok) HealthSeverity.OK else HealthSeverity.ACTION_REQUIRED, if (ok) "已允许" else "未允许，无法自动转发", "去授权")
+        return HealthCheckItem(name, if (ok) HealthSeverity.OK else HealthSeverity.ACTION_REQUIRED, if (ok) "Permitido" else "Sin permiso; no se puede reenviar automáticamente", "Conceder permiso")
     }
 
     private fun item(name: String, ok: Boolean, okText: String, badText: String, badSeverity: HealthSeverity): HealthCheckItem =
