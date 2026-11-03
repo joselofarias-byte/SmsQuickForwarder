@@ -45,8 +45,8 @@ class OnboardingActivity : Activity() {
 
     private fun render() {
         root.removeAllViews()
-        root.addView(UiKit.title(this, "配置向导"))
-        root.addView(UiKit.subtitle(this, "第 ${step + 1} / 6 步"))
+        root.addView(UiKit.title(this, getString(R.string.ui_asistente_de_configuracion)))
+        root.addView(UiKit.subtitle(this, "Paso ${step + 1} de 6"))
         when (step) {
             0 -> welcomeStep()
             1 -> targetStep()
@@ -59,10 +59,10 @@ class OnboardingActivity : Activity() {
 
     private fun welcomeStep() {
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "欢迎使用短信快转发"))
-            addView(UiKit.subtitle(this@OnboardingActivity, "本 App 自动接收普通 SMS，并按规则转发到指定号码。不支持 RCS。自动发送短信可能产生运营商费用。"))
-            addView(UiKit.primaryButton(this@OnboardingActivity, "开始配置") { next() })
-            addView(UiKit.secondaryButton(this@OnboardingActivity, "稍后配置") { finish() })
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_bienvenido_a_sms_quick_forwarder)))
+            addView(UiKit.subtitle(this@OnboardingActivity, getString(R.string.ui_esta_aplicacion_recibe_sms_y_los_reenvia_al_numero_indicado_segun)))
+            addView(UiKit.primaryButton(this@OnboardingActivity, getString(R.string.ui_iniciar_configuracion)) { next() })
+            addView(UiKit.secondaryButton(this@OnboardingActivity, getString(R.string.ui_configurar_mas_tarde)) { finish() })
         })
     }
 
@@ -73,23 +73,23 @@ class OnboardingActivity : Activity() {
             setText(SettingsStore.targetPhone(this@OnboardingActivity))
         }
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "设置转发目标手机号"))
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_configurar_numero_de_destino)))
             addView(input)
-            addView(UiKit.subtitle(this@OnboardingActivity, "保存前会二次确认，联系人不会被读取。"))
-            addView(UiKit.primaryButton(this@OnboardingActivity, "保存并继续") {
+            addView(UiKit.subtitle(this@OnboardingActivity, getString(R.string.ui_se_pedira_confirmacion_antes_de_guardar_no_se_accede_a_los_contac)))
+            addView(UiKit.primaryButton(this@OnboardingActivity, getString(R.string.ui_guardar_y_continuar)) {
                 val value = input.text.toString().trim()
                 if (!isValidPhone(value)) {
-                    Toast.makeText(this@OnboardingActivity, "请输入有效手机号", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@OnboardingActivity, getString(R.string.ui_ingresa_un_numero_de_telefono_valido), Toast.LENGTH_SHORT).show()
                     return@primaryButton
                 }
                 AlertDialog.Builder(this@OnboardingActivity)
-                    .setTitle("确认目标号码")
-                    .setMessage("短信将转发到：${PhoneMaskUtils.mask(value)}")
-                    .setPositiveButton("确认") { _, _ ->
+                    .setTitle(getString(R.string.ui_confirmar_numero_de_destino))
+                    .setMessage("Los SMS se reenviarán a: ${PhoneMaskUtils.mask(value)}")
+                    .setPositiveButton("Confirmar") { _, _ ->
                         SettingsStore.setTargetPhone(this@OnboardingActivity, value)
                         next()
                     }
-                    .setNegativeButton("返回修改", null)
+                    .setNegativeButton(getString(R.string.ui_volver_y_editar), null)
                     .show()
             })
         })
@@ -97,60 +97,60 @@ class OnboardingActivity : Activity() {
 
     private fun permissionStep() {
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "权限配置"))
-            permissionRow(this, "接收短信", Manifest.permission.RECEIVE_SMS, 401)
-            permissionRow(this, "发送短信", Manifest.permission.SEND_SMS, 402)
-            if (Build.VERSION.SDK_INT >= 33) permissionRow(this, "通知", Manifest.permission.POST_NOTIFICATIONS, 403)
-            addView(UiKit.primaryButton(this@OnboardingActivity, "下一步") { next() })
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_configurar_permisos)))
+            permissionRow(this, getString(R.string.ui_recibir_sms), Manifest.permission.RECEIVE_SMS, 401)
+            permissionRow(this, getString(R.string.ui_enviar_sms), Manifest.permission.SEND_SMS, 402)
+            if (Build.VERSION.SDK_INT >= 33) permissionRow(this, "Notificaciones", Manifest.permission.POST_NOTIFICATIONS, 403)
+            addView(UiKit.primaryButton(this@OnboardingActivity, "Siguiente") { next() })
         })
     }
 
     private fun permissionRow(container: LinearLayout, label: String, permission: String, code: Int) {
         val row = UiKit.row(this)
-        row.addView(UiKit.body(this, "$label：${if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "已允许" else "未允许"}").apply {
+        row.addView(UiKit.body(this, "$label: ${if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "Permitido" else "No permitido"}").apply {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
-        row.addView(UiKit.secondaryButton(this, "去授权") { requestPermissions(arrayOf(permission), code) })
+        row.addView(UiKit.secondaryButton(this, getString(R.string.ui_conceder_permiso)) { requestPermissions(arrayOf(permission), code) })
         container.addView(row)
     }
 
     private fun backgroundStep() {
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "后台运行"))
-            addView(UiKit.subtitle(this@OnboardingActivity, "为避免锁屏或长时间待机后漏转，建议设置为不受限制。"))
-            addView(UiKit.body(this@OnboardingActivity, "前台服务：${if (SettingsStore.isServiceRunning(this@OnboardingActivity)) "运行中" else "未运行"}"))
-            addView(UiKit.body(this@OnboardingActivity, "电池优化：${if (batteryOk()) "不受限制" else "可能受限制"}"))
-            addView(UiKit.secondaryButton(this@OnboardingActivity, "打开电池设置") { runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } })
-            addView(UiKit.secondaryButton(this@OnboardingActivity, "重新检查") { render() })
-            addView(UiKit.primaryButton(this@OnboardingActivity, "下一步") { next() })
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_funcionamiento_en_segundo_plano)))
+            addView(UiKit.subtitle(this@OnboardingActivity, getString(R.string.ui_para_evitar_que_se_interrumpan_los_reenvios_al_bloquear_la_pantal)))
+            addView(UiKit.body(this@OnboardingActivity, "Servicio en primer plano: ${if (SettingsStore.isServiceRunning(this@OnboardingActivity)) "En ejecución" else "Detenido"}"))
+            addView(UiKit.body(this@OnboardingActivity, "Optimización de batería: ${if (batteryOk()) "Sin restricciones" else "Puede estar restringido"}"))
+            addView(UiKit.secondaryButton(this@OnboardingActivity, getString(R.string.ui_abrir_ajustes_de_bateria)) { runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } })
+            addView(UiKit.secondaryButton(this@OnboardingActivity, getString(R.string.ui_volver_a_comprobar)) { render() })
+            addView(UiKit.primaryButton(this@OnboardingActivity, "Siguiente") { next() })
         })
     }
 
     private fun testStep() {
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "测试发送"))
-            addView(UiKit.subtitle(this@OnboardingActivity, if (testEventId.isBlank()) "发送一条测试短信到目标号码。" else "测试事件：$testEventId"))
-            addView(UiKit.primaryButton(this@OnboardingActivity, "发送测试短信") {
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_envio_de_prueba)))
+            addView(UiKit.subtitle(this@OnboardingActivity, if (testEventId.isBlank()) getString(R.string.ui_enviar_un_sms_de_prueba_al_numero_de_destino) else "Evento de prueba: $testEventId"))
+            addView(UiKit.primaryButton(this@OnboardingActivity, getString(R.string.ui_enviar_sms_de_prueba)) {
                 testEventId = SmsForwarder.sendTestMessage(this@OnboardingActivity)
-                Toast.makeText(this@OnboardingActivity, "已提交测试发送", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@OnboardingActivity, getString(R.string.ui_envio_de_prueba_solicitado), Toast.LENGTH_SHORT).show()
                 render()
             })
-            addView(UiKit.secondaryButton(this@OnboardingActivity, "重新检查权限") { render() })
-            addView(UiKit.primaryButton(this@OnboardingActivity, "下一步") { next() })
+            addView(UiKit.secondaryButton(this@OnboardingActivity, getString(R.string.ui_comprobar_permisos_nuevamente)) { render() })
+            addView(UiKit.primaryButton(this@OnboardingActivity, "Siguiente") { next() })
         })
     }
 
     private fun completeStep() {
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@OnboardingActivity, "配置完成"))
-            addView(UiKit.subtitle(this@OnboardingActivity, "短信转发已准备就绪。"))
-            addView(UiKit.body(this@OnboardingActivity, "目标号码：${PhoneMaskUtils.mask(SettingsStore.targetPhone(this@OnboardingActivity))}"))
-            addView(UiKit.body(this@OnboardingActivity, "接收权限：${perm(Manifest.permission.RECEIVE_SMS)}"))
-            addView(UiKit.body(this@OnboardingActivity, "发送权限：${perm(Manifest.permission.SEND_SMS)}"))
-            addView(UiKit.body(this@OnboardingActivity, "通知权限：${if (Build.VERSION.SDK_INT < 33) "无需授权" else perm(Manifest.permission.POST_NOTIFICATIONS)}"))
-            addView(UiKit.body(this@OnboardingActivity, "后台运行：${if (batteryOk()) "不受限制" else "建议继续设置"}"))
-            addView(UiKit.body(this@OnboardingActivity, "测试发送：${if (testEventId.isBlank()) "未测试" else "已提交"}"))
-            addView(UiKit.primaryButton(this@OnboardingActivity, "进入首页") {
+            addView(UiKit.body(this@OnboardingActivity, getString(R.string.ui_configuracion_completada)))
+            addView(UiKit.subtitle(this@OnboardingActivity, getString(R.string.ui_todo_listo_para_reenviar_sms)))
+            addView(UiKit.body(this@OnboardingActivity, "Número de destino: ${PhoneMaskUtils.mask(SettingsStore.targetPhone(this@OnboardingActivity))}"))
+            addView(UiKit.body(this@OnboardingActivity, "Permiso de recepción: ${perm(Manifest.permission.RECEIVE_SMS)}"))
+            addView(UiKit.body(this@OnboardingActivity, "Permiso de envío: ${perm(Manifest.permission.SEND_SMS)}"))
+            addView(UiKit.body(this@OnboardingActivity, "Permiso de notificaciones: ${if (Build.VERSION.SDK_INT < 33) "No requiere permiso" else perm(Manifest.permission.POST_NOTIFICATIONS)}"))
+            addView(UiKit.body(this@OnboardingActivity, "Funcionamiento en segundo plano: ${if (batteryOk()) "Sin restricciones" else "Se recomienda completar los ajustes"}"))
+            addView(UiKit.body(this@OnboardingActivity, "Envío de prueba: ${if (testEventId.isBlank()) "Sin probar" else "Solicitado"}"))
+            addView(UiKit.primaryButton(this@OnboardingActivity, getString(R.string.ui_ir_al_inicio)) {
                 OnboardingPreferences.markCompleted(this@OnboardingActivity)
                 if (SettingsStore.isEnabled(this@OnboardingActivity)) startForegroundService(Intent(this@OnboardingActivity, ForwardForegroundService::class.java))
                 finish()
@@ -165,7 +165,7 @@ class OnboardingActivity : Activity() {
     }
 
     private fun perm(permission: String): String =
-        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "已允许" else "未允许"
+        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "Permitido" else getString(R.string.ui_no_permitido)
 
     private fun batteryOk(): Boolean =
         getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)
