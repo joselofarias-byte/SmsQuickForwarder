@@ -115,7 +115,7 @@ class MainActivity : Activity() {
 
     private fun renderHome() {
         contentRoot.addView(UiKit.title(this, getString(R.string.app_name)))
-        contentRoot.addView(UiKit.subtitle(this, "只在你开启转发后处理本机收到的普通 SMS"))
+        contentRoot.addView(UiKit.subtitle(this, getString(R.string.ui_solo_procesa_los_mensajes_recibidos_cuando_activas_el_reenvio_de_)))
         contentRoot.addView(statusCard())
         updatePromptCard()?.let { contentRoot.addView(it) }
         failureWarningCard()?.let { contentRoot.addView(it) }
@@ -129,24 +129,24 @@ class MainActivity : Activity() {
 
     private fun statusCard(): LinearLayout {
         val target = SettingsStore.targetPhone(this)
-        val lastSuccess = ForwardLogStore.findLatestTime(this) { isForwardSuccess(it.optString("decision")) }.ifBlank { "暂无" }
+        val lastSuccess = ForwardLogStore.findLatestTime(this) { isForwardSuccess(it.optString("decision")) }.ifBlank { getString(R.string.ui_sin_datos) }
         val todaySuccess = ForwardLogStore.countToday(this) { isForwardSuccess(it.optString("decision")) }
         val todayFailed = ForwardLogStore.countToday(this) { it.optString("decision").contains("failed", ignoreCase = true) }
         val state = currentState()
         return UiKit.card(this).apply {
             val row = UiKit.row(this@MainActivity)
-            row.addView(UiKit.body(this@MainActivity, "当前状态").apply {
+            row.addView(UiKit.body(this@MainActivity, getString(R.string.ui_estado_actual)).apply {
                 textSize = 16f
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             row.addView(UiKit.tag(this@MainActivity, state.label, state.color))
             addView(row)
-            addView(UiKit.subtitle(this@MainActivity, if (SettingsStore.isEnabled(this@MainActivity) && target.isNotBlank()) "收到符合规则的短信后，将自动转发到 ${PhoneMaskUtils.mask(target)}" else "短信转发已暂停或配置未完成"))
+            addView(UiKit.subtitle(this@MainActivity, if (SettingsStore.isEnabled(this@MainActivity) && target.isNotBlank()) "Los SMS que coincidan con las reglas se reenviarán automáticamente a ${PhoneMaskUtils.mask(target)}" else getString(R.string.ui_reenvio_de_sms_pausado_o_configuracion_incompleta)))
             addView(UiKit.divider(this@MainActivity))
-            addView(UiKit.body(this@MainActivity, "转发目标：${if (target.isNotBlank()) PhoneMaskUtils.mask(target) else "未设置"}"))
-            addView(UiKit.body(this@MainActivity, "最近成功：$lastSuccess"))
-            addView(UiKit.body(this@MainActivity, "今日成功 / 失败：$todaySuccess / $todayFailed"))
-            addView(UiKit.body(this@MainActivity, "转发模式：${modeLabel(RuleStore.forwardMode(this@MainActivity))}"))
+            addView(UiKit.body(this@MainActivity, "Destino del reenvío: ${if (target.isNotBlank()) PhoneMaskUtils.mask(target) else "Sin configurar"}"))
+            addView(UiKit.body(this@MainActivity, "Último envío correcto: $lastSuccess"))
+            addView(UiKit.body(this@MainActivity, "Correctos / fallidos hoy: $todaySuccess / $todayFailed"))
+            addView(UiKit.body(this@MainActivity, "Modo de reenvío: ${modeLabel(RuleStore.forwardMode(this@MainActivity))}"))
         }
     }
 
@@ -160,9 +160,9 @@ class MainActivity : Activity() {
                 textSize = 16f
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
-            row.addView(UiKit.tag(this@MainActivity, "NEW", getColor(R.color.primary)))
+            row.addView(UiKit.tag(this@MainActivity, "NUEVA", getColor(R.color.primary)))
             addView(row)
-            addView(UiKit.subtitle(this@MainActivity, "当前版本 ${BuildConfig.VERSION_NAME}\n\n本次更新：\n${releaseNotesPreview(info.releaseNotes)}"))
+            addView(UiKit.subtitle(this@MainActivity, "Versión actual ${BuildConfig.VERSION_NAME}\n\nCambios de esta versión: \n${releaseNotesPreview(info.releaseNotes)}"))
             val actions = UiKit.row(this@MainActivity)
             actions.addView(gridButton(getString(R.string.view_update)) { openUrl(info.releaseUrl) })
             actions.addView(gridButton(getString(R.string.ignore_this_version)) {
@@ -179,14 +179,14 @@ class MainActivity : Activity() {
 
     private fun targetCard(): LinearLayout {
         val input = EditText(this).apply {
-            hint = "目标手机号"
+            hint = getString(R.string.ui_numero_de_telefono_de_destino)
             inputType = InputType.TYPE_CLASS_PHONE
             setText(SettingsStore.targetPhone(this@MainActivity))
         }
         return UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "转发目标"))
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_destino_del_reenvio)))
             addView(input)
-            addView(UiKit.primaryButton(this@MainActivity, "保存目标手机号") {
+            addView(UiKit.primaryButton(this@MainActivity, getString(R.string.ui_guardar_numero_de_destino)) {
                 SettingsStore.setTargetPhone(this@MainActivity, input.text.toString())
                 render()
             })
@@ -195,7 +195,7 @@ class MainActivity : Activity() {
 
     private fun switchCard(): LinearLayout {
         val enabledSwitch = Switch(this).apply {
-            text = "启用短信转发"
+            text = getString(R.string.ui_activar_reenvio_de_sms)
             refreshing = true
             isChecked = SettingsStore.isEnabled(this@MainActivity)
             refreshing = false
@@ -219,20 +219,20 @@ class MainActivity : Activity() {
         }
         return UiKit.card(this).apply {
             addView(enabledSwitch)
-            addView(UiKit.subtitle(this@MainActivity, "关闭后仍保留设置和日志，但不会转发新短信。"))
+            addView(UiKit.subtitle(this@MainActivity, getString(R.string.ui_al_desactivar_se_conservan_los_ajustes_y_los_registros_pero_no_se)))
         }
     }
 
     private fun quickActionsCard(): LinearLayout = UiKit.card(this).apply {
-        addView(UiKit.body(this@MainActivity, "快捷操作"))
+        addView(UiKit.body(this@MainActivity, getString(R.string.ui_acciones_rapidas)))
         val row1 = UiKit.row(this@MainActivity)
-        row1.addView(gridButton("测试发送") {
+        row1.addView(gridButton(getString(R.string.ui_envio_de_prueba)) {
             SmsForwarder.sendTestMessage(this@MainActivity)
             render()
         })
-        row1.addView(gridButton("规则设置") { currentTab = Tab.RULES; render() })
+        row1.addView(gridButton(getString(R.string.ui_ajustes_de_reglas)) { currentTab = Tab.RULES; render() })
         val row2 = UiKit.row(this@MainActivity)
-        row2.addView(gridButton("最近记录") { currentTab = Tab.LOGS; render() })
+        row2.addView(gridButton(getString(R.string.ui_registros_recientes)) { currentTab = Tab.LOGS; render() })
         row2.addView(gridButton(getString(R.string.debug_info)) { startActivity(Intent(this@MainActivity, DebugActivity::class.java)) })
         addView(row1)
         addView(row2)
@@ -240,26 +240,26 @@ class MainActivity : Activity() {
 
     private fun permissionCard(): LinearLayout = UiKit.card(this).apply {
         val row = UiKit.row(this@MainActivity)
-        row.addView(UiKit.body(this@MainActivity, "权限与运行条件").apply { layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
+        row.addView(UiKit.body(this@MainActivity, getString(R.string.ui_permisos_y_condiciones_de_funcionamiento)).apply { layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
         row.addView(UiKit.tag(this@MainActivity, if (canForwardNormally()) getString(R.string.ready_to_forward) else getString(R.string.setup_required), if (canForwardNormally()) getColor(R.color.success) else getColor(R.color.warning)))
         addView(row)
         addView(UiKit.divider(this@MainActivity))
-        addView(UiKit.body(this@MainActivity, "接收短信：${if (hasReceiveSmsPermission()) "已允许" else "未允许"}"))
-        addView(UiKit.body(this@MainActivity, "发送短信：${if (hasSendSmsPermission()) "已允许" else "未允许"}"))
-        addView(UiKit.body(this@MainActivity, "通知：${if (hasNotificationPermission()) "已允许" else "未允许"}"))
-        addView(UiKit.body(this@MainActivity, "电池后台运行：${if (isBatteryUnrestricted()) "不受限制" else "可能受限制"}"))
+        addView(UiKit.body(this@MainActivity, "Recibir SMS: ${if (hasReceiveSmsPermission()) "Permitido" else "No permitido"}"))
+        addView(UiKit.body(this@MainActivity, "Enviar SMS: ${if (hasSendSmsPermission()) "Permitido" else "No permitido"}"))
+        addView(UiKit.body(this@MainActivity, "Notificaciones: ${if (hasNotificationPermission()) "Permitido" else "No permitido"}"))
+        addView(UiKit.body(this@MainActivity, "Batería en segundo plano: ${if (isBatteryUnrestricted()) "Sin restricciones" else "Puede estar restringido"}"))
         if (!hasSendSmsPermission()) {
-            addView(UiKit.subtitle(this@MainActivity, "发送短信权限尚未开启。此权限用于把本机收到的短信转发到你设置的目标号码。"))
-            addView(UiKit.primaryButton(this@MainActivity, "开启发送短信权限") { requestSendSmsPermission() })
+            addView(UiKit.subtitle(this@MainActivity, getString(R.string.ui_el_permiso_para_enviar_sms_no_esta_habilitado_este_permiso_permit)))
+            addView(UiKit.primaryButton(this@MainActivity, getString(R.string.ui_habilitar_permiso_para_enviar_sms)) { requestSendSmsPermission() })
         }
         val actions = UiKit.row(this@MainActivity)
         actions.addView(gridButton(getString(R.string.setup_help)) { showPermissionHelpDialog() })
-        actions.addView(gridButton("重新检查") {
+        actions.addView(gridButton(getString(R.string.ui_volver_a_comprobar)) {
             render()
-            Toast.makeText(this@MainActivity, if (canForwardNormally()) "权限状态已更新" else "仍有设置未完成", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@MainActivity, if (canForwardNormally()) getString(R.string.ui_estado_de_permisos_actualizado) else getString(R.string.ui_aun_faltan_ajustes_por_completar), Toast.LENGTH_SHORT).show()
         })
         addView(actions)
-        addView(UiKit.secondaryButton(this@MainActivity, "运行健康检查") { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
+        addView(UiKit.secondaryButton(this@MainActivity, getString(R.string.ui_comprobar_funcionamiento)) { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
     }
 
     private fun recentPreviewCard(limit: Int): LinearLayout = UiKit.card(this).apply {
@@ -269,13 +269,13 @@ class MainActivity : Activity() {
         addView(row)
         val events = ForwardLogStore.recentUserEvents(this@MainActivity, limit)
         if (events.length() == 0) {
-            addView(UiKit.subtitle(this@MainActivity, "暂无有效短信记录"))
+            addView(UiKit.subtitle(this@MainActivity, getString(R.string.ui_todavia_no_hay_registros_de_sms_validos)))
         } else {
             for (i in 0 until events.length()) {
                 val obj = events.getJSONObject(i)
                 addView(UiKit.divider(this@MainActivity))
                 addView(UiKit.body(this@MainActivity, "${obj.optString("receivedAt")}  ${decisionLabel(obj.optString("decision"))}"))
-                addView(UiKit.subtitle(this@MainActivity, "${PhoneMaskUtils.mask(obj.optString("sender"))}  ${MessagePrivacyUtils.maskVerificationCodes(obj.optString("bodyPreview"))}\n规则：${obj.optString("primaryMatchedRuleName").ifBlank { "无" }}"))
+                addView(UiKit.subtitle(this@MainActivity, "${PhoneMaskUtils.mask(obj.optString("sender"))}  ${MessagePrivacyUtils.maskVerificationCodes(obj.optString("bodyPreview"))}\nReglas: ${obj.optString("primaryMatchedRuleName").ifBlank { "Ninguno" }}"))
             }
         }
     }
@@ -285,107 +285,107 @@ class MainActivity : Activity() {
         val rules = RuleStore.rules(this)
         val mode = RuleStore.forwardMode(this)
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "${getString(R.string.forward_mode)}：${modeLabel(mode)}"))
-            addView(UiKit.subtitle(this@MainActivity, "已启用 ${rules.count { it.enabled }} · 包含 ${rules.count { it.type == RuleType.INCLUDE }} · 排除 ${rules.count { it.type == RuleType.EXCLUDE }}"))
-            addView(UiKit.primaryButton(this@MainActivity, if (mode == ForwardMode.ALL) "切换为仅匹配短信" else "切换为转发全部短信") {
+            addView(UiKit.body(this@MainActivity, "${getString(R.string.forward_mode)}: ${modeLabel(mode)}"))
+            addView(UiKit.subtitle(this@MainActivity, "Activadas ${rules.count { it.enabled }} · Inclusión ${rules.count { it.type == RuleType.INCLUDE }} · Exclusión ${rules.count { it.type == RuleType.EXCLUDE }}"))
+            addView(UiKit.primaryButton(this@MainActivity, if (mode == ForwardMode.ALL) getString(R.string.ui_reenviar_solo_coincidencias) else getString(R.string.ui_reenviar_todos_los_sms)) {
                 val next = if (mode == ForwardMode.ALL) ForwardMode.MATCH_ONLY else ForwardMode.ALL
                 RuleStore.setForwardMode(this@MainActivity, next)
                 if (next == ForwardMode.MATCH_ONLY && rules.none { it.enabled && it.type == RuleType.INCLUDE }) {
-                    Toast.makeText(this@MainActivity, "当前没有包含规则，所有短信都会被跳过。", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.ui_no_hay_reglas_de_inclusion_se_omitiran_todos_los_sms), Toast.LENGTH_LONG).show()
                 }
                 render()
             })
         })
-        contentRoot.addView(UiKit.section(this, "主要操作"))
+        contentRoot.addView(UiKit.section(this, getString(R.string.ui_acciones_principales)))
         val actions = UiKit.card(this)
         val row1 = UiKit.row(this)
-        row1.addView(gridButton("新建包含规则") { startActivity(Intent(this, RuleEditActivity::class.java).putExtra(RuleEditActivity.EXTRA_TYPE, RuleType.INCLUDE.name)) })
-        row1.addView(gridButton("新建排除规则") { startActivity(Intent(this, RuleEditActivity::class.java).putExtra(RuleEditActivity.EXTRA_TYPE, RuleType.EXCLUDE.name)) })
+        row1.addView(gridButton(getString(R.string.ui_nueva_regla_de_inclusion)) { startActivity(Intent(this, RuleEditActivity::class.java).putExtra(RuleEditActivity.EXTRA_TYPE, RuleType.INCLUDE.name)) })
+        row1.addView(gridButton(getString(R.string.ui_nueva_regla_de_exclusion)) { startActivity(Intent(this, RuleEditActivity::class.java).putExtra(RuleEditActivity.EXTRA_TYPE, RuleType.EXCLUDE.name)) })
         val row2 = UiKit.row(this)
         row2.addView(gridButton(getString(R.string.test_rules)) { startActivity(Intent(this, RuleTestActivity::class.java)) })
-        row2.addView(gridButton("完整规则管理") { startActivity(Intent(this, RulesActivity::class.java)) })
+        row2.addView(gridButton(getString(R.string.ui_administrar_todas_las_reglas)) { startActivity(Intent(this, RulesActivity::class.java)) })
         actions.addView(row1)
         actions.addView(row2)
         contentRoot.addView(actions)
-        contentRoot.addView(UiKit.section(this, "规则列表"))
+        contentRoot.addView(UiKit.section(this, getString(R.string.ui_lista_de_reglas)))
         if (rules.isEmpty()) {
-            contentRoot.addView(UiKit.card(this).apply { addView(UiKit.body(this@MainActivity, "暂无规则。默认仍会转发全部普通短信。")) })
+            contentRoot.addView(UiKit.card(this).apply { addView(UiKit.body(this@MainActivity, getString(R.string.ui_todavia_no_hay_reglas_de_forma_predeterminada_se_reenviaran_todos))) })
         } else {
             rules.take(20).forEach { rule ->
                 contentRoot.addView(UiKit.card(this).apply {
                     val row = UiKit.row(this@MainActivity)
                     row.addView(UiKit.body(this@MainActivity, "${rule.priority}. ${rule.name}").apply { layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
-                    row.addView(UiKit.tag(this@MainActivity, if (rule.type == RuleType.INCLUDE) "包含" else "排除", if (rule.type == RuleType.INCLUDE) getColor(R.color.primary) else getColor(R.color.warning)))
+                    row.addView(UiKit.tag(this@MainActivity, if (rule.type == RuleType.INCLUDE) "Incluir" else "Excluir", if (rule.type == RuleType.INCLUDE) getColor(R.color.primary) else getColor(R.color.warning)))
                     addView(row)
-                    addView(UiKit.subtitle(this@MainActivity, "${rule.field.name} / ${rule.matchMode.name} / ${rule.pattern.take(48)}\n${if (rule.enabled) "已启用" else "已停用"}"))
+                    addView(UiKit.subtitle(this@MainActivity, "${DisplayLabels.field(rule.field.name)} / ${DisplayLabels.match(rule.matchMode.name)} / ${rule.pattern.take(48)}\n${if (rule.enabled) "Activada" else "Desactivada"}"))
                 })
             }
         }
-        contentRoot.addView(UiKit.section(this, "高级操作"))
+        contentRoot.addView(UiKit.section(this, getString(R.string.ui_acciones_avanzadas)))
         contentRoot.addView(UiKit.card(this).apply {
             val row = UiKit.row(this@MainActivity)
-            row.addView(gridButton("复制规则 JSON") {
+            row.addView(gridButton(getString(R.string.ui_copiar_reglas_json)) {
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("rules", RuleStore.exportRules(this@MainActivity, includePatterns = true)))
-                Toast.makeText(this@MainActivity, "规则 JSON 已复制", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.ui_reglas_json_copiado), Toast.LENGTH_SHORT).show()
             })
-            row.addView(gridButton("粘贴导入规则") { startActivity(Intent(this@MainActivity, RulesActivity::class.java)) })
+            row.addView(gridButton(getString(R.string.ui_pegar_e_importar_reglas)) { startActivity(Intent(this@MainActivity, RulesActivity::class.java)) })
             addView(row)
         })
     }
 
     private fun renderLogsPreview() {
         contentRoot.addView(UiKit.title(this, getString(R.string.logs)))
-        contentRoot.addView(UiKit.subtitle(this, "最近短信处理记录"))
+        contentRoot.addView(UiKit.subtitle(this, getString(R.string.ui_ultimos_sms_procesados)))
         contentRoot.addView(recentPreviewCard(20))
-        contentRoot.addView(UiKit.primaryButton(this, "打开记录筛选页") { startActivity(Intent(this, LogsActivity::class.java)) })
+        contentRoot.addView(UiKit.primaryButton(this, getString(R.string.ui_abrir_filtros_de_registros)) { startActivity(Intent(this, LogsActivity::class.java)) })
     }
 
     private fun renderAbout() {
         contentRoot.addView(UiKit.title(this, getString(R.string.about)))
         contentRoot.addView(UiKit.card(this).apply {
             addView(UiKit.body(this@MainActivity, getString(R.string.app_name)).apply { textSize = 18f })
-            addView(UiKit.subtitle(this@MainActivity, "短信快转发 / SMS Quick Forwarder"))
-            addView(UiKit.body(this@MainActivity, "${getString(R.string.current_version)}：${BuildConfig.VERSION_NAME}"))
-            addView(UiKit.body(this@MainActivity, "${getString(R.string.build_number)}：${BuildConfig.VERSION_CODE}"))
-            addView(UiKit.body(this@MainActivity, "applicationId：${BuildConfig.APPLICATION_ID}"))
+            addView(UiKit.subtitle(this@MainActivity, getString(R.string.ui_sms_quick_forwarder)))
+            addView(UiKit.body(this@MainActivity, "${getString(R.string.current_version)}: ${BuildConfig.VERSION_NAME}"))
+            addView(UiKit.body(this@MainActivity, "${getString(R.string.build_number)}: ${BuildConfig.VERSION_CODE}"))
+            addView(UiKit.body(this@MainActivity, "applicationId: ${BuildConfig.APPLICATION_ID}"))
         })
         contentRoot.addView(updateStatusCard())
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "应用设置"))
-            addView(UiKit.primaryButton(this@MainActivity, "重新运行配置向导") {
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_ajustes_de_la_aplicacion)))
+            addView(UiKit.primaryButton(this@MainActivity, getString(R.string.ui_repetir_asistente_de_configuracion)) {
                 OnboardingPreferences.setStep(this@MainActivity, 0)
                 startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
             })
             val failureSwitch = Switch(this@MainActivity).apply {
-                text = "转发失败通知"
+                text = getString(R.string.ui_avisos_de_reenvio_fallido)
                 isChecked = SettingsStore.failureNotificationsEnabled(this@MainActivity)
                 setOnCheckedChangeListener { _, checked -> SettingsStore.setFailureNotificationsEnabled(this@MainActivity, checked) }
             }
             addView(failureSwitch)
-            addView(UiKit.secondaryButton(this@MainActivity, "日志保留时间：${retentionLabel(LogRetentionDays.fromName(SettingsStore.logRetention(this@MainActivity)))}") { showLogRetentionDialog() })
+            addView(UiKit.secondaryButton(this@MainActivity, "Conservación de registros: ${retentionLabel(LogRetentionDays.fromName(SettingsStore.logRetention(this@MainActivity)))}") { showLogRetentionDialog() })
         })
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "数据与备份"))
-            addView(UiKit.primaryButton(this@MainActivity, "备份与恢复") { startActivity(Intent(this@MainActivity, BackupActivity::class.java)) })
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_datos_y_copias_de_seguridad)))
+            addView(UiKit.primaryButton(this@MainActivity, getString(R.string.ui_copia_de_seguridad_y_restauracion)) { startActivity(Intent(this@MainActivity, BackupActivity::class.java)) })
         })
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "运行与诊断"))
-            addView(UiKit.primaryButton(this@MainActivity, "运行健康检查") { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_funcionamiento_y_diagnostico)))
+            addView(UiKit.primaryButton(this@MainActivity, getString(R.string.ui_comprobar_funcionamiento)) { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
             addView(UiKit.secondaryButton(this@MainActivity, getString(R.string.debug_info)) { startActivity(Intent(this@MainActivity, DebugActivity::class.java)) })
             addView(UiKit.secondaryButton(this@MainActivity, getString(R.string.copy_diagnostic_summary)) {
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("diagnostics", DebugInfoBuilder.diagnosticSummary(this@MainActivity)))
-                Toast.makeText(this@MainActivity, "诊断摘要已复制", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.ui_resumen_de_diagnostico_copiado), Toast.LENGTH_SHORT).show()
             })
         })
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "版本与开源"))
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_version_y_codigo_abierto)))
             addView(UiKit.primaryButton(this@MainActivity, getString(R.string.changelog)) { startActivity(Intent(this@MainActivity, ChangelogActivity::class.java)) })
             addView(UiKit.secondaryButton(this@MainActivity, getString(R.string.github_repository)) { openUrl("https://github.com/oncet886/SmsQuickForwarder") })
             addView(UiKit.secondaryButton(this@MainActivity, getString(R.string.github_releases)) { openUrl("https://github.com/oncet886/SmsQuickForwarder/releases") })
         })
         contentRoot.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "隐私与说明"))
-            addView(UiKit.subtitle(this@MainActivity, "网络权限仅用于访问 GitHub Releases 检查新版本。配置备份、健康检查、日志搜索都只在本机执行；失败通知默认脱敏，不上传短信、号码、规则或日志。"))
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_privacidad_e_informacion)))
+            addView(UiKit.subtitle(this@MainActivity, getString(R.string.ui_el_permiso_de_internet_solo_se_usa_para_buscar_nuevas_versiones_e)))
         })
     }
 
@@ -395,31 +395,31 @@ class MainActivity : Activity() {
         if (!FailureNotificationPolicy.hasActiveFailure(failureAt, successAt)) return null
         val event = ForwardLogStore.latestFailureEvent(this)
         return UiKit.card(this).apply {
-            addView(UiKit.body(this@MainActivity, "最近一次转发失败"))
-            addView(UiKit.subtitle(this@MainActivity, "原因：${ForwardLogStore.latestFailureReason(this@MainActivity).ifBlank { "未知失败" }}\n时间：$failureAt"))
+            addView(UiKit.body(this@MainActivity, getString(R.string.ui_ultimo_reenvio_fallido)))
+            addView(UiKit.subtitle(this@MainActivity, "Motivo: ${ForwardLogStore.latestFailureReason(this@MainActivity).ifBlank { "Fallo desconocido" }}\nFecha: $failureAt"))
             val row = UiKit.row(this@MainActivity)
-            row.addView(gridButton("查看详情") {
+            row.addView(gridButton(getString(R.string.ui_ver_detalles)) {
                 event?.optString("eventId")?.takeIf { it.isNotBlank() }?.let {
                     startActivity(Intent(this@MainActivity, LogDetailActivity::class.java).putExtra(LogDetailActivity.EXTRA_EVENT_ID, it))
                 }
             })
-            row.addView(gridButton("重新检查") { render() })
-            row.addView(gridButton("去修复") { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
+            row.addView(gridButton(getString(R.string.ui_volver_a_comprobar)) { render() })
+            row.addView(gridButton("Corregir") { startActivity(Intent(this@MainActivity, HealthCheckActivity::class.java)) })
             addView(row)
         }
     }
 
     private fun updateStatusCard(): LinearLayout = UiKit.card(this).apply {
         addView(UiKit.body(this@MainActivity, getString(R.string.version_updates)).apply { textSize = 16f })
-        addView(UiKit.body(this@MainActivity, "当前版本：${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"))
-        addView(UiKit.body(this@MainActivity, "自动检查更新：${if (UpdatePreferences.autoCheckEnabled(this@MainActivity)) "开启" else "关闭"}"))
-        addView(UiKit.body(this@MainActivity, "检查频率：${frequencyLabel(UpdatePreferences.frequency(this@MainActivity))}"))
-        addView(UiKit.body(this@MainActivity, "上次检查：${formatCheckTime(UpdatePreferences.lastCheckAt(this@MainActivity))}"))
-        addView(UiKit.body(this@MainActivity, "当前状态：${updateStateLabel()}"))
+        addView(UiKit.body(this@MainActivity, "Versión actual: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"))
+        addView(UiKit.body(this@MainActivity, "Buscar actualizaciones automáticamente: ${if (UpdatePreferences.autoCheckEnabled(this@MainActivity)) "Activado" else "Desactivado"}"))
+        addView(UiKit.body(this@MainActivity, "Frecuencia de comprobación: ${frequencyLabel(UpdatePreferences.frequency(this@MainActivity))}"))
+        addView(UiKit.body(this@MainActivity, "Última comprobación: ${formatCheckTime(UpdatePreferences.lastCheckAt(this@MainActivity))}"))
+        addView(UiKit.body(this@MainActivity, "Estado actual: ${updateStateLabel()}"))
         val ignored = UpdatePreferences.ignoredVersion(this@MainActivity)
-        if (ignored.isNotBlank()) addView(UiKit.subtitle(this@MainActivity, "已忽略版本：$ignored"))
+        if (ignored.isNotBlank()) addView(UiKit.subtitle(this@MainActivity, "Versión ignorada: $ignored"))
         val row1 = UiKit.row(this@MainActivity)
-        row1.addView(gridButton(if (updateChecking) "检查中..." else getString(R.string.check_now)) { manualCheckUpdates() })
+        row1.addView(gridButton(if (updateChecking) "Comprobando..." else getString(R.string.check_now)) { manualCheckUpdates() })
         row1.addView(gridButton(getString(R.string.github_releases)) { openUrl("https://github.com/oncet886/SmsQuickForwarder/releases") })
         val row2 = UiKit.row(this@MainActivity)
         row2.addView(gridButton(getString(R.string.update_settings)) { showUpdateSettingsDialog() })
@@ -445,9 +445,9 @@ class MainActivity : Activity() {
     }
 
     private fun decisionLabel(decision: String): String = when {
-        isForwardSuccess(decision) -> "已转发"
-        decision.contains("failed", ignoreCase = true) -> "失败"
-        decision.startsWith("skipped") -> "已跳过"
+        isForwardSuccess(decision) -> "Reenviado"
+        decision.contains("failed", ignoreCase = true) -> getString(R.string.ui_fallo)
+        decision.startsWith("skipped") -> "Omitido"
         else -> decision
     }
 
@@ -480,9 +480,9 @@ class MainActivity : Activity() {
         if (SettingsStore.isSetupGuideShown(this)) return
         SettingsStore.setSetupGuideShown(this, true)
         AlertDialog.Builder(this)
-            .setTitle("开始使用")
-            .setMessage("1. 允许接收短信\n用于识别本机收到的普通短信。\n\n2. 允许发送短信\n用于把短信转发到目标号码。\n\n3. 设置电池为不受限制\n避免锁屏或后台时停止转发。")
-            .setPositiveButton("开始设置") { _, _ -> requestNeededPermissions() }
+            .setTitle(getString(R.string.ui_primeros_pasos))
+            .setMessage(getString(R.string.ui_1_permitir_recibir_sms_npermite_detectar_los_sms_recibidos_en_est))
+            .setPositiveButton("Configurar") { _, _ -> requestNeededPermissions() }
             .show()
     }
 
@@ -527,31 +527,31 @@ class MainActivity : Activity() {
 
     private fun showSendSmsSettingsDialog() {
         AlertDialog.Builder(this)
-            .setTitle("需要开启发送短信权限")
-            .setMessage("SMS Quick Forwarder 需要发送短信权限，才能把收到的短信转发到目标号码。\n\n请按以下步骤开启：\n\n1. 打开应用信息\n2. 点击‘权限’\n3. 点击‘短信’\n4. 选择‘允许’\n\n三星手机通常路径为：\n设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许")
-            .setPositiveButton("打开应用设置") { _, _ -> openAppSettings() }
-            .setNegativeButton("暂不设置", null)
+            .setTitle(getString(R.string.ui_es_necesario_habilitar_el_permiso_para_enviar_sms))
+            .setMessage(getString(R.string.ui_sms_quick_forwarder_requiere_permiso_para_enviar_sms_para_reenvia))
+            .setPositiveButton(getString(R.string.ui_abrir_ajustes_de_la_aplicacion)) { _, _ -> openAppSettings() }
+            .setNegativeButton(getString(R.string.ui_ahora_no), null)
             .show()
     }
 
     private fun showPermissionHelpDialog() {
         AlertDialog.Builder(this)
-            .setTitle("短信权限设置")
-            .setMessage("三星手机：\n设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许\n\n其他安卓手机：\n设置 → 应用管理 → SMS Quick Forwarder → 权限管理 → 短信 → 允许\n\n如果页面中只显示‘短信’，进入后选择‘允许’即可。\n\n完成后返回 App，状态会自动刷新。")
-            .setPositiveButton("知道了", null)
+            .setTitle(getString(R.string.ui_ajustes_de_permisos_de_sms))
+            .setMessage(getString(R.string.ui_samsung_najustes_aplicaciones_sms_quick_forwarder_permisos_sms_pe))
+            .setPositiveButton("Entendido", null)
             .show()
     }
 
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
         runCatching { startActivity(intent) }.onFailure {
-            Toast.makeText(this, "无法自动打开设置，请手动进入：设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.ui_no_se_pudieron_abrir_los_ajustes_automaticamente_abri_manualmente), Toast.LENGTH_LONG).show()
         }
     }
 
     private fun openUrl(url: String) {
         runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }.onFailure {
-            Toast.makeText(this, "无法打开链接", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.ui_no_se_pudo_abrir_el_enlace), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -594,19 +594,19 @@ class MainActivity : Activity() {
             setPadding(UiKit.dp(this@MainActivity, 8), UiKit.dp(this@MainActivity, 6), UiKit.dp(this@MainActivity, 8), 0)
         }
         val autoSwitch = Switch(this).apply {
-            text = "自动检查更新"
+            text = getString(R.string.ui_buscar_actualizaciones_automaticamente)
             isChecked = UpdatePreferences.autoCheckEnabled(this@MainActivity)
         }
         val notificationSwitch = Switch(this).apply {
-            text = "后台通知"
+            text = getString(R.string.ui_notificaciones_en_segundo_plano)
             isChecked = UpdatePreferences.notificationsEnabled(this@MainActivity)
         }
         val group = RadioGroup(this).apply {
             orientation = RadioGroup.VERTICAL
         }
-        val daily = frequencyRadio("每天", UpdateFrequency.DAILY)
-        val weekly = frequencyRadio("每周", UpdateFrequency.WEEKLY)
-        val startup = frequencyRadio("仅启动时", UpdateFrequency.ON_APP_START_ONLY)
+        val daily = frequencyRadio(getString(R.string.ui_cada_dia), UpdateFrequency.DAILY)
+        val weekly = frequencyRadio(getString(R.string.ui_cada_semana), UpdateFrequency.WEEKLY)
+        val startup = frequencyRadio(getString(R.string.ui_solo_al_iniciar), UpdateFrequency.ON_APP_START_ONLY)
         group.addView(daily)
         group.addView(weekly)
         group.addView(startup)
@@ -616,28 +616,28 @@ class MainActivity : Activity() {
             UpdateFrequency.ON_APP_START_ONLY -> startup.isChecked = true
         }
         container.addView(autoSwitch)
-        container.addView(UiKit.subtitle(this, "检查 GitHub Releases，只读取公开版本信息。"))
+        container.addView(UiKit.subtitle(this, getString(R.string.ui_comprobar_github_releases_solo_consulta_la_informacion_publica_de)))
         container.addView(notificationSwitch)
-        if (!hasNotificationPermission()) container.addView(UiKit.subtitle(this, "通知权限未允许时，只显示 App 内提醒。"))
-        container.addView(UiKit.body(this, "检查频率"))
+        if (!hasNotificationPermission()) container.addView(UiKit.subtitle(this, getString(R.string.ui_si_no_se_concedio_el_permiso_de_notificaciones_solo_se_muestran_a)))
+        container.addView(UiKit.body(this, getString(R.string.ui_frecuencia_de_comprobacion)))
         container.addView(group)
         val ignored = UpdatePreferences.ignoredVersion(this)
-        container.addView(UiKit.subtitle(this, "已忽略版本：${ignored.ifBlank { "无" }}"))
+        container.addView(UiKit.subtitle(this, "Versión ignorada: ${ignored.ifBlank { "Ninguno" }}"))
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.update_settings))
             .setView(container)
-            .setPositiveButton("保存") { _, _ ->
+            .setPositiveButton("Guardar") { _, _ ->
                 UpdatePreferences.setAutoCheckEnabled(this, autoSwitch.isChecked)
                 UpdatePreferences.setNotificationsEnabled(this, notificationSwitch.isChecked)
                 UpdatePreferences.setFrequency(this, selectedFrequency(group.checkedRadioButtonId))
                 UpdateScheduler.configure(this)
                 render()
             }
-            .setNeutralButton("清除忽略版本") { _, _ ->
+            .setNeutralButton(getString(R.string.ui_restablecer_version_ignorada)) { _, _ ->
                 UpdatePreferences.clearIgnoredVersion(this)
                 render()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
@@ -651,30 +651,30 @@ class MainActivity : Activity() {
         UpdateFrequency.values().firstOrNull { it.ordinal + 10_000 == checkedId } ?: UpdateFrequency.DAILY
 
     private fun frequencyLabel(frequency: UpdateFrequency): String = when (frequency) {
-        UpdateFrequency.DAILY -> "每天"
-        UpdateFrequency.WEEKLY -> "每周"
-        UpdateFrequency.ON_APP_START_ONLY -> "仅启动时"
+        UpdateFrequency.DAILY -> getString(R.string.ui_cada_dia)
+        UpdateFrequency.WEEKLY -> getString(R.string.ui_cada_semana)
+        UpdateFrequency.ON_APP_START_ONLY -> getString(R.string.ui_solo_al_iniciar)
     }
 
     private fun updateStateLabel(result: UpdateCheckResult? = updateResult): String = when (result) {
-        is UpdateCheckResult.UpdateAvailable -> "发现新版本 ${result.info.latestVersionName}"
+        is UpdateCheckResult.UpdateAvailable -> "Nueva versión disponible ${result.info.latestVersionName}"
         is UpdateCheckResult.UpToDate -> getString(R.string.up_to_date)
-        is UpdateCheckResult.Error -> "检查失败：${result.message}"
-        null -> if (UpdatePreferences.lastKnownLatestVersion(this).isBlank()) "尚未检查" else "最近发现 ${UpdatePreferences.lastKnownLatestVersion(this)}"
+        is UpdateCheckResult.Error -> "No se pudo comprobar: ${result.message}"
+        null -> if (UpdatePreferences.lastKnownLatestVersion(this).isBlank()) getString(R.string.ui_sin_comprobar) else "Última versión detectada ${UpdatePreferences.lastKnownLatestVersion(this)}"
     }
 
     private fun releaseNotesPreview(notes: String): String {
         val lines = notes.lines().map { it.trim().trimStart('-', '*').trim() }.filter { it.isNotBlank() }
-        return lines.take(4).joinToString("\n") { "- $it" }.ifBlank { "- 查看 GitHub Release 获取详情" }
+        return lines.take(4).joinToString("\n") { "- $it" }.ifBlank { getString(R.string.ui_ver_github_release_para_ver_los_detalles) }
     }
 
     private fun formatCheckTime(timestamp: Long): String =
-        if (timestamp <= 0L) "尚未检查" else java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date(timestamp))
+        if (timestamp <= 0L) getString(R.string.ui_sin_comprobar) else java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date(timestamp))
 
     private fun showLogRetentionDialog() {
         val labels = LogRetentionDays.values().map { retentionLabel(it) }.toTypedArray()
         AlertDialog.Builder(this)
-            .setTitle("日志保留时间")
+            .setTitle(getString(R.string.ui_conservacion_de_registros))
             .setItems(labels) { _, which ->
                 val selected = LogRetentionDays.values()[which]
                 SettingsStore.setLogRetention(this, selected.name)
@@ -685,10 +685,10 @@ class MainActivity : Activity() {
     }
 
     private fun retentionLabel(value: LogRetentionDays): String = when (value) {
-        LogRetentionDays.DAYS_7 -> "7 天"
-        LogRetentionDays.DAYS_30 -> "30 天"
-        LogRetentionDays.DAYS_90 -> "90 天"
-        LogRetentionDays.FOREVER -> "永久保留"
+        LogRetentionDays.DAYS_7 -> getString(R.string.ui_7_dias)
+        LogRetentionDays.DAYS_30 -> getString(R.string.ui_30_dias)
+        LogRetentionDays.DAYS_90 -> getString(R.string.ui_90_dias)
+        LogRetentionDays.FOREVER -> getString(R.string.ui_conservar_siempre)
     }
 
     private fun canEnableForwarding(): Boolean =
@@ -698,11 +698,11 @@ class MainActivity : Activity() {
         SettingsStore.targetPhone(this).isNotBlank() && hasReceiveSmsPermission() && hasSendSmsPermission() && hasNotificationPermission()
 
     private fun missingEnableMessage(): String = when {
-        SettingsStore.targetPhone(this).isBlank() -> "请先设置目标手机号"
-        !hasReceiveSmsPermission() && !hasSendSmsPermission() -> "请先开启接收和发送短信权限"
-        !hasSendSmsPermission() -> "请先开启发送短信权限"
-        !hasReceiveSmsPermission() -> "请先开启接收短信权限"
-        else -> "仍有设置未完成"
+        SettingsStore.targetPhone(this).isBlank() -> getString(R.string.ui_primero_configura_el_numero_de_destino)
+        !hasReceiveSmsPermission() && !hasSendSmsPermission() -> getString(R.string.ui_primero_habilita_los_permisos_para_recibir_y_enviar_sms)
+        !hasSendSmsPermission() -> getString(R.string.ui_primero_habilita_el_permiso_para_enviar_sms)
+        !hasReceiveSmsPermission() -> getString(R.string.ui_primero_habilita_el_permiso_para_recibir_sms)
+        else -> getString(R.string.ui_aun_faltan_ajustes_por_completar)
     }
 
     private fun neededPermissions(): List<String> {

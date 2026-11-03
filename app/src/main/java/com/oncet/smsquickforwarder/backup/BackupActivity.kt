@@ -32,21 +32,21 @@ class BackupActivity : Activity() {
 
     private fun render() {
         root.removeAllViews()
-        root.addView(UiKit.title(this, "备份与恢复"))
-        root.addView(UiKit.subtitle(this, "仅备份设置和规则，不包含短信正文、日志详情、历史号码或任何密码。"))
+        root.addView(UiKit.title(this, getString(R.string.ui_copia_de_seguridad_y_restauracion)))
+        root.addView(UiKit.subtitle(this, getString(R.string.ui_solo_se_guardan_los_ajustes_y_las_reglas_no_incluye_el_contenido_)))
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@BackupActivity, "导出配置"))
-            addView(UiKit.primaryButton(this@BackupActivity, "复制 JSON 文本") {
-                getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("SmsQuickForwarder backup", currentBackup))
-                Toast.makeText(this@BackupActivity, "配置备份 JSON 已复制", Toast.LENGTH_SHORT).show()
+            addView(UiKit.body(this@BackupActivity, getString(R.string.ui_exportar_configuracion)))
+            addView(UiKit.primaryButton(this@BackupActivity, getString(R.string.ui_copiar_json_texto)) {
+                getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(getString(R.string.ui_smsquickforwarder_backup), currentBackup))
+                Toast.makeText(this@BackupActivity, getString(R.string.ui_copia_de_seguridad_json_copiado), Toast.LENGTH_SHORT).show()
             })
-            addView(UiKit.secondaryButton(this@BackupActivity, "分享 JSON 文件") { shareBackupFile() })
-            addView(UiKit.secondaryButton(this@BackupActivity, "保存为 JSON 文件") { saveBackupFile() })
+            addView(UiKit.secondaryButton(this@BackupActivity, getString(R.string.ui_compartir_json_archivo)) { shareBackupFile() })
+            addView(UiKit.secondaryButton(this@BackupActivity, getString(R.string.ui_guardar_como_json_archivo)) { saveBackupFile() })
         })
         root.addView(UiKit.card(this).apply {
-            addView(UiKit.body(this@BackupActivity, "恢复配置"))
-            addView(UiKit.subtitle(this@BackupActivity, "粘贴备份 JSON 后会先预览，不会直接覆盖。"))
-            addView(UiKit.primaryButton(this@BackupActivity, "粘贴导入 JSON") { showPasteImportDialog() })
+            addView(UiKit.body(this@BackupActivity, getString(R.string.ui_restaurar_configuracion)))
+            addView(UiKit.subtitle(this@BackupActivity, getString(R.string.ui_pegar_copia_de_seguridad_json_se_mostrara_una_vista_previa_antes_)))
+            addView(UiKit.primaryButton(this@BackupActivity, getString(R.string.ui_pegar_e_importar_json)) { showPasteImportDialog() })
         })
     }
 
@@ -59,7 +59,7 @@ class BackupActivity : Activity() {
             clipData = ClipData.newRawUri("sms_backup_json", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(intent, "分享配置备份"))
+        startActivity(Intent.createChooser(intent, getString(R.string.ui_compartir_copia_de_seguridad)))
     }
 
     private fun saveBackupFile() {
@@ -81,8 +81,8 @@ class BackupActivity : Activity() {
     private fun writeUri(uri: Uri, raw: String) {
         runCatching {
             contentResolver.openOutputStream(uri)?.use { it.write(raw.toByteArray(Charsets.UTF_8)) }
-            Toast.makeText(this, "配置备份已保存", Toast.LENGTH_SHORT).show()
-        }.onFailure { Toast.makeText(this, "保存失败", Toast.LENGTH_SHORT).show() }
+            Toast.makeText(this, getString(R.string.ui_copia_de_seguridad_guardada), Toast.LENGTH_SHORT).show()
+        }.onFailure { Toast.makeText(this, getString(R.string.ui_no_se_pudo_guardar), Toast.LENGTH_SHORT).show() }
     }
 
     private fun showPasteImportDialog() {
@@ -91,30 +91,30 @@ class BackupActivity : Activity() {
             hint = "{ ... }"
         }
         AlertDialog.Builder(this)
-            .setTitle("粘贴备份 JSON")
+            .setTitle(getString(R.string.ui_pegar_copia_de_seguridad_json))
             .setView(input)
-            .setPositiveButton("预览") { _, _ -> showPreview(input.text.toString()) }
-            .setNegativeButton("取消", null)
+            .setPositiveButton(getString(R.string.ui_vista_previa)) { _, _ -> showPreview(input.text.toString()) }
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
     private fun showPreview(raw: String) {
         val preview = BackupManager.preview(raw)
         AlertDialog.Builder(this)
-            .setTitle(if (preview.valid) "恢复预览" else "无法恢复")
-            .setMessage("版本：${preview.appVersionName}\n导出时间：${preview.exportedAt}\n目标号码：${if (preview.hasTargetPhone) "包含" else "无"}\n规则数量：${preview.ruleCount}\n未知字段：${preview.unknownFieldCount}\n状态：${preview.message}")
-            .setPositiveButton("合并恢复") { _, _ -> restore(raw, RestoreMode.MERGE) }
-            .setNeutralButton("全部替换") { _, _ -> confirmReplace(raw) }
-            .setNegativeButton("取消", null)
+            .setTitle(if (preview.valid) getString(R.string.ui_vista_previa_de_restauracion) else getString(R.string.ui_no_se_puede_restaurar))
+            .setMessage("Versión: ${preview.appVersionName}\nFecha de exportación: ${preview.exportedAt}\nNúmero de destino: ${if (preview.hasTargetPhone) "Incluido" else "Ninguno"}\nCantidad de reglas: ${preview.ruleCount}\nCampos desconocidos: ${preview.unknownFieldCount}\nEstado: ${preview.message}")
+            .setPositiveButton(getString(R.string.ui_restaurar_y_combinar)) { _, _ -> restore(raw, RestoreMode.MERGE) }
+            .setNeutralButton(getString(R.string.ui_reemplazar_todo)) { _, _ -> confirmReplace(raw) }
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
     private fun confirmReplace(raw: String) {
         AlertDialog.Builder(this)
-            .setTitle("确认全部替换")
-            .setMessage("将替换当前设置和规则。恢复前会自动创建当前配置快照，不会恢复或删除日志。")
-            .setPositiveButton("确认替换") { _, _ -> restore(raw, RestoreMode.REPLACE) }
-            .setNegativeButton("取消", null)
+            .setTitle(getString(R.string.ui_confirmar_reemplazo_completo))
+            .setMessage(getString(R.string.ui_se_reemplazaran_los_ajustes_y_las_reglas_actuales_antes_de_restau))
+            .setPositiveButton(getString(R.string.ui_confirmar_reemplazo)) { _, _ -> restore(raw, RestoreMode.REPLACE) }
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
@@ -125,7 +125,7 @@ class BackupActivity : Activity() {
         } else {
             stopService(Intent(this, ForwardForegroundService::class.java))
         }
-        Toast.makeText(this, "恢复完成：新增 ${result.validRules}，重复 ${result.duplicateRules}，无效 ${result.invalidRules}", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Restauración completada: Agregadas ${result.validRules}, Duplicadas ${result.duplicateRules}, No válidas ${result.invalidRules}", Toast.LENGTH_LONG).show()
         render()
     }
 }

@@ -27,28 +27,28 @@ class RuleTestActivity : Activity() {
             text = getString(R.string.test_rules)
             textSize = 22f
         })
-        senderInput = EditText(this).apply { hint = "模拟发送号码" }
-        bodyInput = EditText(this).apply { hint = "模拟短信正文"; minLines = 4 }
+        senderInput = EditText(this).apply { hint = getString(R.string.ui_numero_de_remitente_para_la_prueba) }
+        bodyInput = EditText(this).apply { hint = getString(R.string.ui_contenido_del_sms_de_prueba); minLines = 4 }
         resultText = TextView(this).apply { setPadding(0, 16, 0, 0) }
         root.addView(senderInput)
         root.addView(bodyInput)
-        root.addView(Button(this).apply { text = "测试匹配"; setOnClickListener { test() } })
+        root.addView(Button(this).apply { text = getString(R.string.ui_probar_coincidencia); setOnClickListener { test() } })
         root.addView(Button(this).apply {
-            text = "填入验证码示例"
+            text = getString(R.string.ui_cargar_ejemplo_de_codigo_de_verificacion)
             setOnClickListener {
                 senderInput.setText("+15550106666")
-                bodyInput.setText("Your verification code is 123456")
+                bodyInput.setText(getString(R.string.ui_tu_codigo_de_verificacion_es_123456))
             }
         })
         root.addView(Button(this).apply {
-            text = "填入广告示例"
+            text = getString(R.string.ui_cargar_ejemplo_de_publicidad)
             setOnClickListener {
                 senderInput.setText("12345")
-                bodyInput.setText("SALE today. Reply STOP to unsubscribe")
+                bodyInput.setText(getString(R.string.ui_ofertas_de_hoy_responde_stop_para_cancelar_la_suscripcion))
             }
         })
         root.addView(Button(this).apply {
-            text = "清空"
+            text = "Vaciar"
             setOnClickListener { senderInput.setText(""); bodyInput.setText(""); resultText.text = "" }
         })
         root.addView(resultText)
@@ -68,12 +68,12 @@ class RuleTestActivity : Activity() {
             applyLoopGuard = true
         )
         resultText.text = buildString {
-            append("最终结果：").append(if (result.shouldForward) getString(R.string.will_forward) else getString(R.string.will_skip)).append("\n")
-            append("原因：").append(result.reason).append("\n")
-            append("当前转发模式：").append(mode.name).append("\n")
-            append("防循环是否触发：").append(if (result.loopGuardTriggered) "是" else "否").append("\n")
-            append("命中的包含规则：").append(result.includeMatches.joinToString { it.name }.ifBlank { "无" }).append("\n")
-            append("命中的排除规则：").append(result.excludeMatches.joinToString { it.name }.ifBlank { "无" })
+            append(getString(R.string.ui_resultado_final)).append(if (result.shouldForward) getString(R.string.will_forward) else getString(R.string.will_skip)).append("\n")
+            append(getString(R.string.ui_motivo)).append(result.reason).append("\n")
+            append(getString(R.string.ui_modo_de_reenvio_actual)).append(DisplayLabels.mode(mode.name)).append("\n")
+            append(getString(R.string.ui_proteccion_contra_bucles_activada)).append(if (result.loopGuardTriggered) getString(R.string.ui_si) else "No").append("\n")
+            append(getString(R.string.ui_reglas_de_inclusion_coincidentes)).append(result.includeMatches.joinToString { it.name }.ifBlank { "Ninguno" }).append("\n")
+            append(getString(R.string.ui_reglas_de_exclusion_coincidentes)).append(result.excludeMatches.joinToString { it.name }.ifBlank { "Ninguno" })
         }
     }
 }

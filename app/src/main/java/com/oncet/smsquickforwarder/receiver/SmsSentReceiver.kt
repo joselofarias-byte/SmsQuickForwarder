@@ -39,12 +39,12 @@ class SmsSentReceiver : BroadcastReceiver() {
     }
 
     private fun resultMessage(code: Int): String = when (code) {
-        Activity.RESULT_OK -> "发送成功"
-        SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "通用失败"
-        SmsManager.RESULT_ERROR_NO_SERVICE -> "无服务"
-        SmsManager.RESULT_ERROR_NULL_PDU -> "PDU 错误"
-        SmsManager.RESULT_ERROR_RADIO_OFF -> "无线电关闭"
-        else -> "未知错误：$code"
+        Activity.RESULT_OK -> "Enviado correctamente"
+        SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "Error general"
+        SmsManager.RESULT_ERROR_NO_SERVICE -> "Sin servicio"
+        SmsManager.RESULT_ERROR_NULL_PDU -> "PDU Error"
+        SmsManager.RESULT_ERROR_RADIO_OFF -> "Radio móvil desactivada"
+        else -> "Error desconocido: $code"
     }
 
     companion object {

@@ -46,58 +46,58 @@ class RulesActivity : Activity() {
             textSize = 22f
         })
         root.addView(TextView(this).apply {
-            text = "当前模式：${modeLabel(mode)}\n已启用：${rules.count { it.enabled }}  包含：${rules.count { it.type == RuleType.INCLUDE }}  排除：${rules.count { it.type == RuleType.EXCLUDE }}"
+            text = "Modo actual: ${modeLabel(mode)}\nActivadas: ${rules.count { it.enabled }}  Inclusión: ${rules.count { it.type == RuleType.INCLUDE }}  Exclusión: ${rules.count { it.type == RuleType.EXCLUDE }}"
             setPadding(0, 12, 0, 12)
         })
         root.addView(Button(this).apply {
-            text = if (mode == ForwardMode.ALL) "切换为：仅转发符合规则的短信" else "切换为：转发全部短信"
+            text = if (mode == ForwardMode.ALL) getString(R.string.ui_cambiar_a_reenviar_solo_los_sms_que_coincidan_con_las_reglas) else getString(R.string.ui_cambiar_a_reenviar_todos_los_sms)
             setOnClickListener {
                 val next = if (mode == ForwardMode.ALL) ForwardMode.MATCH_ONLY else ForwardMode.ALL
                 RuleStore.setForwardMode(this@RulesActivity, next)
                 if (next == ForwardMode.MATCH_ONLY && rules.none { it.enabled && it.type == RuleType.INCLUDE }) {
-                    Toast.makeText(this@RulesActivity, "当前没有包含规则，所有短信都会被跳过。", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@RulesActivity, getString(R.string.ui_no_hay_reglas_de_inclusion_se_omitiran_todos_los_sms), Toast.LENGTH_LONG).show()
                 }
                 render()
             }
         })
         root.addView(Button(this).apply {
-            text = "新建包含规则"
+            text = getString(R.string.ui_nueva_regla_de_inclusion)
             setOnClickListener { openEditor(RuleType.INCLUDE) }
         })
         root.addView(Button(this).apply {
-            text = "新建排除规则"
+            text = getString(R.string.ui_nueva_regla_de_exclusion)
             setOnClickListener { openEditor(RuleType.EXCLUDE) }
         })
         root.addView(TextView(this).apply {
-            text = "快捷规则"
+            text = getString(R.string.ui_reglas_rapidas)
             textSize = 16f
             setPadding(0, 18, 0, 6)
         })
-        addTemplateButton("验证码", "verification", RuleType.INCLUDE)
-        addTemplateButton("银行", "bank", RuleType.INCLUDE)
-        addTemplateButton("快递", "delivery", RuleType.INCLUDE)
-        addTemplateButton("账单", "bill", RuleType.INCLUDE)
-        addTemplateButton("登录提醒", "login", RuleType.INCLUDE)
-        addTemplateButton("广告退订", "unsubscribe", RuleType.EXCLUDE)
-        addTemplateButton("指定号码", "sender", RuleType.EXCLUDE)
+        addTemplateButton(getString(R.string.ui_codigo_de_verificacion), "verification", RuleType.INCLUDE)
+        addTemplateButton("Banco", "bank", RuleType.INCLUDE)
+        addTemplateButton(getString(R.string.ui_envios), "delivery", RuleType.INCLUDE)
+        addTemplateButton("Facturas", "bill", RuleType.INCLUDE)
+        addTemplateButton(getString(R.string.ui_avisos_de_inicio_de_sesion), "login", RuleType.INCLUDE)
+        addTemplateButton(getString(R.string.ui_cancelar_publicidad), "unsubscribe", RuleType.EXCLUDE)
+        addTemplateButton(getString(R.string.ui_numero_especifico), "sender", RuleType.EXCLUDE)
         root.addView(Button(this).apply {
-            text = "复制规则 JSON"
+            text = getString(R.string.ui_copiar_reglas_json)
             setOnClickListener {
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("rules", RuleStore.exportRules(this@RulesActivity, includePatterns = true)))
-                Toast.makeText(this@RulesActivity, "规则 JSON 已复制", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@RulesActivity, getString(R.string.ui_reglas_json_copiado), Toast.LENGTH_SHORT).show()
             }
         })
         root.addView(Button(this).apply {
-            text = "粘贴导入规则 JSON"
+            text = getString(R.string.ui_pegar_e_importar_reglas_json)
             setOnClickListener { showImportDialog() }
         })
         root.addView(TextView(this).apply {
-            text = "规则列表"
+            text = getString(R.string.ui_lista_de_reglas)
             textSize = 16f
             setPadding(0, 18, 0, 6)
         })
         if (rules.isEmpty()) {
-            root.addView(TextView(this).apply { text = "暂无规则。默认仍会转发全部普通短信。" })
+            root.addView(TextView(this).apply { text = getString(R.string.ui_todavia_no_hay_reglas_de_forma_predeterminada_se_reenviaran_todos) })
         } else {
             rules.forEach { addRuleRow(it) }
         }
@@ -109,57 +109,57 @@ class RulesActivity : Activity() {
             setPadding(0, 12, 0, 12)
         }
         box.addView(TextView(this).apply {
-            text = "${rule.priority}. ${rule.name}  ${if (rule.type == RuleType.INCLUDE) "包含" else "排除"}\n${fieldLabel(rule)} / ${matchLabel(rule)} / ${rule.pattern}\n状态：${if (rule.enabled) "启用" else "停用"}"
+            text = "${rule.priority}. ${rule.name}  ${if (rule.type == RuleType.INCLUDE) "Incluir" else "Excluir"}\n${fieldLabel(rule)} / ${matchLabel(rule)} / ${rule.pattern}\nEstado: ${if (rule.enabled) "Activada" else "Desactivada"}"
         })
         box.addView(Switch(this).apply {
-            text = "启用"
+            text = "Activar"
             isChecked = rule.enabled
             setOnCheckedChangeListener { _, checked -> RuleStore.setEnabled(this@RulesActivity, rule.id, checked); render() }
         })
         val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        actions.addView(Button(this).apply { text = "编辑"; setOnClickListener { openEditor(rule.type, rule.id) } })
-        actions.addView(Button(this).apply { text = "上移"; setOnClickListener { RuleStore.move(this@RulesActivity, rule.id, -1); render() } })
-        actions.addView(Button(this).apply { text = "下移"; setOnClickListener { RuleStore.move(this@RulesActivity, rule.id, 1); render() } })
-        actions.addView(Button(this).apply { text = "删除"; setOnClickListener { confirmDelete(rule) } })
+        actions.addView(Button(this).apply { text = "Editar"; setOnClickListener { openEditor(rule.type, rule.id) } })
+        actions.addView(Button(this).apply { text = "Subir"; setOnClickListener { RuleStore.move(this@RulesActivity, rule.id, -1); render() } })
+        actions.addView(Button(this).apply { text = "Bajar"; setOnClickListener { RuleStore.move(this@RulesActivity, rule.id, 1); render() } })
+        actions.addView(Button(this).apply { text = "Eliminar"; setOnClickListener { confirmDelete(rule) } })
         box.addView(actions)
         root.addView(box)
     }
 
     private fun showImportDialog() {
         val input = android.widget.EditText(this).apply {
-            hint = "粘贴规则 JSON"
+            hint = getString(R.string.ui_pegar_reglas_json)
             minLines = 5
         }
         AlertDialog.Builder(this)
-            .setTitle("导入规则")
+            .setTitle(getString(R.string.ui_importar_reglas))
             .setView(input)
-            .setPositiveButton("合并导入") { _, _ ->
+            .setPositiveButton(getString(R.string.ui_importar_y_combinar)) { _, _ ->
                 val result = RuleStore.importRules(this, input.text.toString(), replace = false)
-                Toast.makeText(this, "新增 ${result.added}，重复 ${result.duplicate}，无效 ${result.invalid}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Agregadas ${result.added}, Duplicadas ${result.duplicate}, No válidas ${result.invalid}", Toast.LENGTH_LONG).show()
                 render()
             }
-            .setNeutralButton("全部替换") { _, _ ->
+            .setNeutralButton(getString(R.string.ui_reemplazar_todo)) { _, _ ->
                 AlertDialog.Builder(this)
-                    .setTitle("确认全部替换")
-                    .setMessage("这会删除现有规则并导入粘贴内容。")
-                    .setPositiveButton("替换") { _, _ ->
+                    .setTitle(getString(R.string.ui_confirmar_reemplazo_completo))
+                    .setMessage(getString(R.string.ui_se_eliminaran_las_reglas_actuales_y_se_importara_el_contenido_peg))
+                    .setPositiveButton("Reemplazar") { _, _ ->
                         val result = RuleStore.importRules(this, input.text.toString(), replace = true)
-                        Toast.makeText(this, "新增 ${result.added}，无效 ${result.invalid}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Agregadas ${result.added}, No válidas ${result.invalid}", Toast.LENGTH_LONG).show()
                         render()
                     }
-                    .setNegativeButton("取消", null)
+                    .setNegativeButton("Cancelar", null)
                     .show()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
     private fun confirmDelete(rule: SmsRule) {
         AlertDialog.Builder(this)
-            .setTitle("删除规则")
-            .setMessage("确定删除“${rule.name}”？")
-            .setPositiveButton("删除") { _, _ -> RuleStore.deleteRule(this, rule.id); render() }
-            .setNegativeButton("取消", null)
+            .setTitle(getString(R.string.ui_eliminar_regla))
+            .setMessage("¿Eliminar «${rule.name}»?")
+            .setPositiveButton("Eliminar") { _, _ -> RuleStore.deleteRule(this, rule.id); render() }
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
@@ -179,6 +179,6 @@ class RulesActivity : Activity() {
     }
 
     private fun modeLabel(mode: ForwardMode) = if (mode == ForwardMode.ALL) getString(R.string.forward_all_sms) else getString(R.string.forward_matched_sms_only)
-    private fun fieldLabel(rule: SmsRule) = when (rule.field.name) { "SENDER" -> "号码"; "BODY" -> "正文"; else -> "任意" }
-    private fun matchLabel(rule: SmsRule) = when (rule.matchMode.name) { "EQUALS" -> "完全相同"; "STARTS_WITH" -> "以此开头"; "REGEX" -> "正则表达式"; else -> "包含" }
+    private fun fieldLabel(rule: SmsRule) = when (rule.field.name) { "SENDER" -> getString(R.string.ui_numero); "BODY" -> "Contenido"; else -> "Cualquiera" }
+    private fun matchLabel(rule: SmsRule) = when (rule.matchMode.name) { "EQUALS" -> getString(R.string.ui_es_igual_a); "STARTS_WITH" -> getString(R.string.ui_empieza_por); "REGEX" -> getString(R.string.ui_expresion_regular); else -> "Incluir" }
 }

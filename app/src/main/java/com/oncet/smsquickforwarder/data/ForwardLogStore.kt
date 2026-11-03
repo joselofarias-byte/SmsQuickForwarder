@@ -228,7 +228,7 @@ object ForwardLogStore {
 
     fun listText(context: Context, limit: Int = 20): String {
         val arr = readArray(context)
-        if (arr.length() == 0) return "暂无记录"
+        if (arr.length() == 0) return "Todavía no hay registros"
         val sb = StringBuilder()
         for (i in 0 until minOf(arr.length(), limit)) {
             val obj = arr.getJSONObject(i)

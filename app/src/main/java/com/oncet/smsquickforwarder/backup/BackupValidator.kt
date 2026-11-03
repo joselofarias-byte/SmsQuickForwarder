@@ -7,11 +7,11 @@ object BackupValidator {
 
     fun preview(raw: String): BackupPreview {
         val root = runCatching { JSONObject(raw) }.getOrElse {
-            return BackupPreview(false, 0, "", "", false, 0, 0, "非法 JSON")
+            return BackupPreview(false, 0, "", "", false, 0, 0, "No válido JSON")
         }
         val schema = root.optInt("schemaVersion", -1)
         if (schema != 1) {
-            return BackupPreview(false, schema, root.optString("appVersionName"), root.optString("exportedAt"), false, 0, 0, "不支持的备份版本")
+            return BackupPreview(false, schema, root.optString("appVersionName"), root.optString("exportedAt"), false, 0, 0, "Versión de copia de seguridad no compatible")
         }
         val settings = root.optJSONObject("settings") ?: JSONObject()
         val rules = root.optJSONArray("rules")
@@ -25,7 +25,7 @@ object BackupValidator {
             hasTargetPhone = settings.optString("targetPhone").isNotBlank(),
             ruleCount = rules?.length() ?: 0,
             unknownFieldCount = unknown,
-            message = "可恢复"
+            message = "Listo para restaurar"
         )
     }
 

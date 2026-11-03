@@ -47,25 +47,25 @@ object DebugInfoBuilder {
     fun summaryText(context: Context): String {
         val json = build(context, includeFullBody = false, includeFullPhone = false)
         return buildString {
-            append("App 设置\n")
+            append("Ajustes de la aplicación\n")
             append(formatObject(json.optJSONObject("appSettings"))).append("\n\n")
-            append("构建信息\n")
+            append("Información de compilación\n")
             append(formatObject(json.optJSONObject("appBuild"))).append("\n\n")
-            append("权限状态\n")
+            append("Estado de permisos\n")
             append(permissionSummary(context)).append("\n\n")
-            append("系统信息\n")
+            append("Información del sistema\n")
             append(formatObject(json.optJSONObject("systemInfo"))).append("\n\n")
-            append("稳定性自检\n")
+            append("Comprobación de estabilidad\n")
             append(formatObject(json.optJSONObject("stabilitySelfCheck"))).append("\n\n")
-            append("规则设置\n")
+            append("Ajustes de reglas\n")
             append(formatObject(json.optJSONObject("rules"))).append("\n\n")
-            append("SIM 信息\n")
+            append("Información de SIM\n")
             append(formatObject(json.optJSONObject("simInfo"))).append("\n\n")
-            append("电池优化\n")
+            append("Optimización de batería\n")
             append(formatObject(json.optJSONObject("batteryOptimization"))).append("\n\n")
-            append("最近事件\n")
+            append("Eventos recientes\n")
             append(ForwardLogStore.listText(context, 20)).append("\n\n")
-            append("稳定性测试清单\n")
+            append("Lista de pruebas de estabilidad\n")
             append(TEST_CHECKLIST)
         }
     }
@@ -77,18 +77,18 @@ object DebugInfoBuilder {
         val lastError = ForwardLogStore.latestFailureReason(context)
         return buildString {
             append("SMS Quick Forwarder ${BuildConfig.VERSION_NAME}+${BuildConfig.VERSION_CODE}\n")
-            append("Device: ${Build.BRAND} ${Build.MODEL}\n")
+            append("Dispositivo: ${Build.BRAND} ${Build.MODEL}\n")
             append("Android: ${Build.VERSION.RELEASE} / SDK ${Build.VERSION.SDK_INT}\n")
-            append("Forwarding: ${if (SettingsStore.isEnabled(context)) "enabled" else "disabled"}\n")
-            append("Target: $target\n")
-            append("Receive SMS: ${permissionState(context, Manifest.permission.RECEIVE_SMS)}\n")
-            append("Send SMS: ${permissionState(context, Manifest.permission.SEND_SMS)}\n")
-            append("Notifications: ${notificationState(context)}\n")
-            append("Foreground service: ${if (SettingsStore.isServiceRunning(context)) "running" else "stopped"}\n")
-            append("Battery unrestricted: ${if (isBatteryUnrestricted(context)) "yes" else "no"}\n")
-            append("Last SMS received: ${lastSms.ifBlank { "none" }}\n")
-            append("Last forward success: ${lastForward.ifBlank { "none" }}\n")
-            append("Last error: ${lastError.ifBlank { "none" }}")
+            append("Reenvío: ${if (SettingsStore.isEnabled(context)) "activado" else "desactivado"}\n")
+            append("Destino: $target\n")
+            append("Recibir SMS: ${permissionState(context, Manifest.permission.RECEIVE_SMS)}\n")
+            append("Enviar SMS: ${permissionState(context, Manifest.permission.SEND_SMS)}\n")
+            append("Notificaciones: ${notificationState(context)}\n")
+            append("Servicio en primer plano: ${if (SettingsStore.isServiceRunning(context)) "en ejecución" else "detenido"}\n")
+            append("Batería sin restricciones: ${if (isBatteryUnrestricted(context)) "sí" else "no"}\n")
+            append("Último SMS recibido: ${lastSms.ifBlank { "ninguno" }}\n")
+            append("Último reenvío correcto: ${lastForward.ifBlank { "ninguno" }}\n")
+            append("Último error: ${lastError.ifBlank { "ninguno" }}")
         }
     }
 
@@ -114,21 +114,21 @@ object DebugInfoBuilder {
 
     private fun permissionGuidance(context: Context) = JSONObject().apply {
         put("sendSmsActionRequired", context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED)
-        put("recommendedPath", "设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许")
+        put("recommendedPath", "Ajustes → Aplicaciones → SMS Quick Forwarder → Permisos → SMS → Permitir")
     }
 
     private fun permissionSummary(context: Context): String = buildString {
-        append("接收短信权限：").append(chinesePermissionState(context, Manifest.permission.RECEIVE_SMS)).append("\n")
-        append("发送短信权限：").append(chinesePermissionState(context, Manifest.permission.SEND_SMS)).append("\n")
-        append("通知权限：").append(if (notificationState(context) == "granted" || notificationState(context) == "not_required") "已允许" else "未允许").append("\n")
-        append("网络权限：仅用于检查 GitHub Releases 新版本")
+        append("Permiso para recibir SMS: ").append(readablePermissionState(context, Manifest.permission.RECEIVE_SMS)).append("\n")
+        append("Permiso para enviar SMS: ").append(readablePermissionState(context, Manifest.permission.SEND_SMS)).append("\n")
+        append("Permiso de notificaciones: ").append(if (notificationState(context) == "granted" || notificationState(context) == "not_required") "Permitido" else "No permitido").append("\n")
+        append("Permiso de internet: solo se usa para buscar nuevas versiones en GitHub Releases")
         if (context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            append("\n\n发送短信权限尚未开启。路径：设置 → 应用 → SMS Quick Forwarder → 权限 → 短信 → 允许")
+            append("\n\nEl permiso para enviar SMS no está habilitado. Ruta: Ajustes → Aplicaciones → SMS Quick Forwarder → Permisos → SMS → Permitir")
         }
     }
 
-    private fun chinesePermissionState(context: Context, permission: String): String =
-        if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "已允许" else "未允许"
+    private fun readablePermissionState(context: Context, permission: String): String =
+        if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) "Permitido" else "No permitido"
 
     private fun systemInfo(context: Context) = JSONObject().apply {
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -170,7 +170,7 @@ object DebugInfoBuilder {
                 put("activeSubscriptionError", "${e.javaClass.simpleName}: ${e.message}")
             }
         } else {
-            put("activeSubscriptionNote", "READ_PHONE_STATE 未授权，无法读取 active subscription 列表")
+            put("activeSubscriptionNote", "Sin permiso READ_PHONE_STATE; no se puede leer la lista de SIM activas")
         }
         put("activeSubscriptions", active)
         put("lastReceivedRawValues", lastRawValues(context))
@@ -210,9 +210,9 @@ object DebugInfoBuilder {
         val hardFail = !receiveSms || !sendSms || !targetSet
         val warning = forwardingEnabled && !serviceRunning || !batteryOk
         val overall = when {
-            hardFail -> "不可用"
-            warning -> "有警告"
-            else -> "正常"
+            hardFail -> "No disponible"
+            warning -> "Con advertencias"
+            else -> "Correcto"
         }
         return JSONObject().apply {
             put("overallStatus", overall)
@@ -238,10 +238,10 @@ object DebugInfoBuilder {
             put("lastRealSmsForwardedAt", lastRealSmsForwardedAt)
             put(
                 "realSmsStatus",
-                if (lastRealSmsForwardedAt.isNotBlank()) "真实短信转发已验证" else "尚未记录真实短信测试"
+                if (lastRealSmsForwardedAt.isNotBlank()) "Reenvío de SMS real verificado" else "Todavía no se probó con un SMS real"
             )
             if (lastFailureAt.isNotBlank() && !failuresAfterLastSuccess) {
-                put("historicalFailureNote", "历史最近失败：${ForwardLogStore.latestFailureReason(context)}，之后已恢复正常")
+                put("historicalFailureNote", "Último fallo registrado: ${ForwardLogStore.latestFailureReason(context)}; el servicio volvió a funcionar después")
             }
         }
     }
@@ -292,20 +292,20 @@ object DebugInfoBuilder {
     }
 
     const val TEST_CHECKLIST = """
-1. 前台打开 App 收短信
-2. App 切后台收短信
-3. 屏幕锁定后收短信
-4. 从最近任务划掉 App 后收短信
-5. 手机重启后不打开 App，直接收短信
-6. 放置 1 小时后收短信
-7. 放置 6 小时后收短信
-8. 飞行模式下收/发
-9. 无蜂窝信号时发送失败和重试
-10. 双卡环境下接收和发送
-11. 长短信 multipart
-12. 目标号码发来的短信防循环
-13. 包含 [SMS Forward] 的短信防循环
-14. 手机重启后前台服务恢复
-15. 日志和 Debug JSON 是否完整
+1. Recibir SMS con la aplicación abierta.
+2. Recibir SMS con la aplicación en segundo plano.
+3. Recibir SMS con la pantalla bloqueada.
+4. Recibir SMS tras quitar la aplicación de las tareas recientes.
+5. Recibir SMS después de reiniciar, sin abrir la aplicación.
+6. Recibir SMS tras una hora en reposo.
+7. Recibir SMS tras seis horas en reposo.
+8. Comprobar recepción y envío en modo avión.
+9. Comprobar fallo y reintento de envío sin señal móvil.
+10. Recibir y enviar con doble SIM.
+11. Comprobar SMS largos con varias partes.
+12. Evitar bucles con SMS del número de destino.
+13. Evitar bucles con SMS que incluyan [SMS Forward].
+14. Recuperar el servicio en primer plano después de reiniciar.
+15. Comprobar que los registros y el JSON de depuración estén completos.
 """
 }

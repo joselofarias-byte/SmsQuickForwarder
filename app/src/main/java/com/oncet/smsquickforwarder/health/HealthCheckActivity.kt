@@ -1,5 +1,6 @@
 package com.oncet.smsquickforwarder.health
 
+import com.oncet.smsquickforwarder.R
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -30,12 +31,12 @@ class HealthCheckActivity : Activity() {
     private fun render() {
         val report = HealthCheckEngine(this).run()
         root.removeAllViews()
-        root.addView(UiKit.title(this, "运行健康检查"))
+        root.addView(UiKit.title(this, getString(R.string.ui_comprobar_funcionamiento)))
         root.addView(UiKit.card(this).apply {
             val text = when (report.overall) {
-                HealthSeverity.OK -> "运行状态良好"
-                HealthSeverity.WARNING -> "发现 ${report.warningCount} 项需要注意"
-                HealthSeverity.ACTION_REQUIRED -> "发现 ${report.actionRequiredCount} 项需要处理"
+                HealthSeverity.OK -> getString(R.string.ui_funcionamiento_correcto)
+                HealthSeverity.WARNING -> "Se encontraron ${report.warningCount} elementos que requieren atención"
+                HealthSeverity.ACTION_REQUIRED -> "Se encontraron ${report.actionRequiredCount} elementos que requieren intervención"
             }
             addView(UiKit.body(this@HealthCheckActivity, text))
         })
@@ -61,9 +62,9 @@ class HealthCheckActivity : Activity() {
     }
 
     private fun severityLabel(severity: HealthSeverity): String = when (severity) {
-        HealthSeverity.OK -> "正常"
-        HealthSeverity.WARNING -> "注意"
-        HealthSeverity.ACTION_REQUIRED -> "处理"
+        HealthSeverity.OK -> "Correcto"
+        HealthSeverity.WARNING -> getString(R.string.ui_atencion)
+        HealthSeverity.ACTION_REQUIRED -> "Resolver"
     }
 
     private fun openAppSettings() {
