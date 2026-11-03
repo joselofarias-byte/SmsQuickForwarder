@@ -23,7 +23,7 @@ object UpdateNotifier {
         val manager = context.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "版本更新", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel(CHANNEL_ID, "Actualizaciones", NotificationManager.IMPORTANCE_DEFAULT)
             )
         }
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.releaseUrl))
@@ -35,8 +35,8 @@ object UpdateNotifier {
         )
         val notification = android.app.Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("${context.getString(R.string.app_name)}有新版本")
-            .setContentText("${info.latestVersionName} 已发布，点击查看更新内容")
+            .setContentTitle("${context.getString(R.string.app_name)} tiene una nueva versión")
+            .setContentText("${info.latestVersionName} Publicado, Tocá para ver los cambios")
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
