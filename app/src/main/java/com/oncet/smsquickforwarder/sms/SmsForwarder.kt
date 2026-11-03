@@ -56,11 +56,11 @@ object SmsForwarder {
         val body = "[SMS Forward Test]\nTime: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())}"
         val eventId = ForwardLogStore.addTestSend(context, target, body)
         if (target.isBlank()) {
-            ForwardLogStore.updateDecision(context, eventId, "skipped_empty_target", "目标手机号为空")
+            ForwardLogStore.updateDecision(context, eventId, "skipped_empty_target", "El número de destino está vacío")
             return eventId
         }
         if (context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ForwardLogStore.updateDecision(context, eventId, "failed_no_permission", "缺少 SEND_SMS 权限", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "failed_no_permission", "Falta el permiso SEND_SMS Permisos", targetPhone = target)
             FailureNotifier.notifyIfNeeded(context, eventId)
             return eventId
         }
@@ -82,19 +82,19 @@ object SmsForwarder {
     private fun validateAndSend(context: Context, eventId: String, sender: String, body: String, retryCount: Int) {
         val target = SettingsStore.targetPhone(context)
         if (!SettingsStore.isEnabled(context)) {
-            ForwardLogStore.updateDecision(context, eventId, "skipped_disabled", "转发已暂停", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "skipped_disabled", "Reenvío pausado", targetPhone = target)
             return
         }
         if (target.isBlank()) {
-            ForwardLogStore.updateDecision(context, eventId, "skipped_empty_target", "目标手机号为空", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "skipped_empty_target", "El número de destino está vacío", targetPhone = target)
             return
         }
         if (PhoneNumberUtil.same(sender, target)) {
-            ForwardLogStore.updateDecision(context, eventId, "skipped_from_target", "来自目标号码，避免循环", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "skipped_from_target", "El remitente es el número de destino; se evita un bucle", targetPhone = target)
             return
         }
         if (body.contains(MARKER, ignoreCase = true)) {
-            ForwardLogStore.updateDecision(context, eventId, "skipped_forward_marker", "内容包含 $MARKER，避免循环", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "skipped_forward_marker", "El contenido incluye $MARKER; se evita un bucle", targetPhone = target)
             return
         }
         val started = System.currentTimeMillis()
@@ -109,7 +109,7 @@ object SmsForwarder {
         ForwardLogStore.updateRuleEvaluation(context, eventId, evaluation, System.currentTimeMillis() - started)
         if (!evaluation.shouldForward) return
         if (context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ForwardLogStore.updateDecision(context, eventId, "failed_no_permission", "缺少 SEND_SMS 权限", targetPhone = target)
+            ForwardLogStore.updateDecision(context, eventId, "failed_no_permission", "Falta el permiso SEND_SMS Permisos", targetPhone = target)
             FailureNotifier.notifyIfNeeded(context, eventId)
             return
         }
@@ -184,7 +184,7 @@ object SmsForwarder {
                 eventId,
                 decision = "failed",
                 sendResult = "final_failed",
-                errorMessage = "已重试 2 次，仍然失败",
+                errorMessage = "El envío sigue fallando después de 2 reintentos",
                 retryCount = retryCount
             )
             FailureNotifier.notifyIfNeeded(context, eventId)
@@ -207,7 +207,7 @@ object SmsForwarder {
             context,
             eventId,
             decision = "retrying",
-            sendResult = "第 $nextRetry 次重试将在 ${delayMs / 1000} 秒后执行",
+            sendResult = "El reintento $nextRetry se realizará dentro de ${delayMs / 1000} segundos",
             retryCount = nextRetry
         )
     }
