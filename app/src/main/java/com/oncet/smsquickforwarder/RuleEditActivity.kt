@@ -45,14 +45,14 @@ class RuleEditActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(32, 40, 32, 32)
         }
-        nameInput = edit("规则名称")
-        patternInput = edit("关键词 / 表达式")
-        priorityInput = edit("优先级，数字越小越优先")
-        typeSpinner = spinner(RuleType.values().map { if (it == RuleType.INCLUDE) "包含" else "排除" })
-        fieldSpinner = spinner(listOf("号码", "正文", "任意"))
-        modeSpinner = spinner(listOf("包含", "完全相同", "以此开头", "正则表达式"))
-        caseBox = CheckBox(this).apply { text = "区分大小写" }
-        enabledBox = CheckBox(this).apply { text = "启用"; isChecked = true }
+        nameInput = edit(getString(R.string.ui_nombre_de_la_regla))
+        patternInput = edit(getString(R.string.ui_palabra_clave_expresion))
+        priorityInput = edit(getString(R.string.ui_prioridad_menor_numero_mayor_prioridad))
+        typeSpinner = spinner(RuleType.values().map { if (it == RuleType.INCLUDE) "Incluir" else "Excluir" })
+        fieldSpinner = spinner(listOf(getString(R.string.ui_numero), "Contenido", "Cualquiera"))
+        modeSpinner = spinner(listOf("Incluir", getString(R.string.ui_es_igual_a), getString(R.string.ui_empieza_por), getString(R.string.ui_expresion_regular)))
+        caseBox = CheckBox(this).apply { text = getString(R.string.ui_distinguir_mayusculas_y_minusculas) }
+        enabledBox = CheckBox(this).apply { text = "Activar"; isChecked = true }
 
         root.addView(nameInput)
         root.addView(typeSpinner)
@@ -63,11 +63,11 @@ class RuleEditActivity : Activity() {
         root.addView(priorityInput)
         root.addView(enabledBox)
         root.addView(Button(this).apply {
-            text = "保存"
+            text = "Guardar"
             setOnClickListener { save() }
         })
         root.addView(Button(this).apply {
-            text = "取消"
+            text = "Cancelar"
             setOnClickListener { finish() }
         })
         val scroll = ScrollView(this).apply { addView(root) }
@@ -95,13 +95,13 @@ class RuleEditActivity : Activity() {
         val now = System.currentTimeMillis()
         val nextPriority = RuleStore.rules(this).size + 1
         val pair = when (template) {
-            "verification" -> "验证码" to "verification code|security code|one-time code|OTP|验证码|动态码|校验码|登录代码"
-            "bank" -> "银行" to "bank|银行"
-            "delivery" -> "快递" to "delivery|快递|包裹"
-            "bill" -> "账单" to "bill|账单"
-            "login" -> "登录提醒" to "login|登录"
-            "unsubscribe" -> "广告退订" to "STOP to unsubscribe"
-            "sender" -> "指定号码" to ""
+            "verification" -> getString(R.string.ui_codigo_de_verificacion) to "verification code|security code|one-time code|OTP|验证码|动态码|校验码|登录代码"
+            "bank" -> "Banco" to "bank|银行"
+            "delivery" -> getString(R.string.ui_envios) to "delivery|快递|包裹"
+            "bill" -> "Facturas" to "bill|账单"
+            "login" -> getString(R.string.ui_avisos_de_inicio_de_sesion) to "login|登录"
+            "unsubscribe" -> getString(R.string.ui_cancelar_publicidad) to "STOP to unsubscribe"
+            "sender" -> getString(R.string.ui_numero_especifico) to ""
             else -> "" to ""
         }
         return SmsRule(
@@ -123,11 +123,11 @@ class RuleEditActivity : Activity() {
         val name = nameInput.text.toString().trim()
         val pattern = patternInput.text.toString().trim()
         if (name.isBlank()) {
-            nameInput.error = "名称不能为空"
+            nameInput.error = getString(R.string.ui_el_nombre_no_puede_estar_vacio)
             return
         }
         if (pattern.isBlank()) {
-            patternInput.error = "pattern 不能为空"
+            patternInput.error = getString(R.string.ui_el_patron_no_puede_estar_vacio)
             return
         }
         val matchMode = when (modeSpinner.selectedItemPosition) {
@@ -137,7 +137,7 @@ class RuleEditActivity : Activity() {
             else -> RuleMatchMode.CONTAINS
         }
         if (matchMode == RuleMatchMode.REGEX && !RuleEngine.isRegexValid(pattern)) {
-            patternInput.error = "正则表达式无效"
+            patternInput.error = getString(R.string.ui_expresion_regular_no_valida)
             return
         }
         val now = System.currentTimeMillis()
@@ -156,10 +156,10 @@ class RuleEditActivity : Activity() {
         )
         if (RuleStore.duplicateExists(this, rule)) {
             AlertDialog.Builder(this)
-                .setTitle("发现重复规则")
-                .setMessage("已有相同规则，仍要保存吗？")
-                .setPositiveButton("保存") { _, _ -> persist(rule) }
-                .setNegativeButton("取消", null)
+                .setTitle(getString(R.string.ui_regla_duplicada))
+                .setMessage(getString(R.string.ui_ya_existe_una_regla_identica_guardar_de_todos_modos))
+                .setPositiveButton("Guardar") { _, _ -> persist(rule) }
+                .setNegativeButton("Cancelar", null)
                 .show()
             return
         }
